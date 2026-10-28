@@ -1,10 +1,16 @@
 import { Suspense } from "react";
 import { CompetitionsSection } from "@/components/competitions-section";
-import { contestsWithImages, getSiteImages } from "@/lib/site-images";
+import { contests } from "@/lib/content";
+import { getSiteImages } from "@/lib/get-site-images";
+import { contestsWithImages } from "@/lib/site-images";
 
 export function CompetitionsLive() {
   return (
-    <Suspense fallback={<CompetitionsSection />}>
+    <Suspense
+      fallback={
+        <CompetitionsSection items={contests.map((contest) => ({ ...contest, image: "" }))} />
+      }
+    >
       <LiveCompetitions />
     </Suspense>
   );

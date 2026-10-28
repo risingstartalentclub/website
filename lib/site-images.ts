@@ -1,8 +1,4 @@
-import { cache } from "react";
-import { connection } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import { assets, contests, winners } from "@/lib/content";
-import { isSupabaseConfigured, supabaseEnv } from "@/lib/supabase/env";
 
 export const siteImageSlots = [
   { key: "logo", label: "Club logo", fallback: assets.logo },
@@ -63,42 +59,6 @@ export function isSafeImageUrl(value: string) {
     return false;
   }
 }
-
-function fallbackImages(): SiteImages {
-  return Object.fromEntries(
-    siteImageSlots.map((slot) => [slot.key, slot.fallback]),
-  ) as SiteImages;
-}
-
-export const getSiteImages = cache(async function getSiteImages(): Promise<SiteImages> {
-  const images = fallbackImages();
-  if (!isSupabaseConfigured()) return images;
-
-  await connection();
-  const { url, key } = supabaseEnv();
-  const supabase = createClient(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-    global: {
-      fetch: (input, init) => fetch(input, { ...init, cache: "no-store" }),
-    },
-  });
-
-  const { data, error } = await supabase.from("site_media").select("key, image_url");
-  if (error || !data) return images;
-
-  for (const row of data) {
-    if (
-      typeof row.key === "string" &&
-      typeof row.image_url === "string" &&
-      isSiteImageKey(row.key) &&
-      isSafeImageUrl(row.image_url)
-    ) {
-      images[row.key] = row.image_url;
-    }
-  }
-
-  return images;
-});
 
 export function contestsWithImages(images: SiteImages) {
   return contests.map((contest) => {

@@ -1,8 +1,7 @@
 import { Suspense } from "react";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { assets } from "@/lib/content";
-import { getSiteImages } from "@/lib/site-images";
+import { getSiteImages } from "@/lib/get-site-images";
 import { getViewer } from "@/lib/viewer";
 
 async function LiveHeader() {
@@ -20,7 +19,7 @@ export function SiteFrame({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Suspense
-        fallback={<SiteHeader logo={assets.logo} signedIn={false} isAdmin={false} />}
+        fallback={<SiteHeader logo="" signedIn={false} isAdmin={false} />}
       >
         <LiveHeader />
       </Suspense>

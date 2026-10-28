@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ContactSection } from "@/components/contact-section";
 import { CtaSection } from "@/components/cta-section";
 import { CompetitionsLive } from "@/components/competitions-live";
 import { HeroSection } from "@/components/hero-section";
@@ -20,6 +21,7 @@ export default function HomePage() {
         <HowItWorksSection />
         <WhySection />
         <WinnersSection />
+        <ContactSection />
         <CtaSection />
       </div>
     </SiteFrame>

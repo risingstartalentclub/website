@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import { AuthDialog } from "@/components/auth-dialog";
 import { navLinks } from "@/lib/content";
 
@@ -19,27 +19,62 @@ export function SiteHeader({
   const [open, setOpen] = useState(false);
   const [menuPath, setMenuPath] = useState(pathname);
   const [authMode, setAuthMode] = useState<"login" | "signup" | null>(null);
+  const [hash, setHash] = useState("");
 
   if (menuPath !== pathname) {
     setMenuPath(pathname);
     setOpen(false);
   }
 
+  useEffect(() => {
+    const sync = () => setHash(window.location.hash);
+    sync();
+    window.addEventListener("hashchange", sync);
+    return () => window.removeEventListener("hashchange", sync);
+  }, [pathname]);
+
   function active(href: string) {
-    if (href === "/") return pathname === "/";
-    return pathname.startsWith(href);
+    if (pathname !== "/") return false;
+    if (href === "/") return hash === "" || hash === "#home";
+    return href === `/${hash}`;
+  }
+
+  function goToSection(event: MouseEvent<HTMLAnchorElement>, href: string) {
+    setOpen(false);
+    if (pathname !== "/") return;
+
+    if (href === "/") {
+      event.preventDefault();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.history.pushState(null, "", "/");
+      setHash("");
+      return;
+    }
+
+    const id = href.startsWith("/#") ? href.slice(2) : "";
+    const target = id ? document.getElementById(id) : null;
+    if (!target) return;
+
+    event.preventDefault();
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.history.pushState(null, "", href);
+    setHash(`#${id}`);
   }
 
   return (
     <header className="fixed top-0 z-50 w-full border-b border-surface-variant bg-surface shadow-[0_1px_8px_rgba(20,43,74,0.06)]">
       <div className="mx-auto flex h-16 w-full max-w-[1280px] items-center gap-3 px-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex shrink-0 items-center gap-2">
-          <img
-            alt="Rising Star Talent Club Logo"
-            className="h-10 w-auto object-contain"
-            src={logo}
-            style={{ mixBlendMode: "multiply", filter: "contrast(1.05)" }}
-          />
+          {logo ? (
+            <img
+              alt="Rising Star Talent Club Logo"
+              className="h-10 w-auto object-contain"
+              src={logo}
+              style={{ mixBlendMode: "multiply", filter: "contrast(1.05)" }}
+            />
+          ) : (
+            <span className="block h-10 w-10" />
+          )}
           <span className="font-headline-sm text-headline-sm hidden tracking-tight text-primary xl:inline-block">
             Rising Star Talent Club
           </span>
@@ -50,7 +85,8 @@ export function SiteHeader({
             <Link
               key={link.href}
               href={link.href}
-              aria-current={active(link.href) ? "page" : undefined}
+              aria-current={active(link.href) ? "true" : undefined}
+              onClick={(event) => goToSection(event, link.href)}
               className={
                 active(link.href)
                   ? "font-label-md text-label-md whitespace-nowrap rounded-lg bg-surface-container px-2.5 py-2 font-bold text-primary"
@@ -112,6 +148,7 @@ export function SiteHeader({
               <Link
                 key={link.href}
                 href={link.href}
+                onClick={(event) => goToSection(event, link.href)}
                 className={
                   active(link.href)
                     ? "font-label-lg text-label-lg font-bold text-primary"

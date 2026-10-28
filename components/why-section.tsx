@@ -33,7 +33,7 @@ const reasons = [
 
 export function WhySection() {
   return (
-    <section className="w-full bg-surface-container-low py-space-xl" id="why-us">
+    <section className="w-full scroll-mt-20 bg-surface-container-low py-space-xl" id="why-us">
       <div className="mx-auto max-w-[1280px] px-margin-mobile md:px-margin">
         <div className="mx-auto mb-space-xl max-w-2xl text-center">
           <span className="font-label-sm text-label-sm mb-space-xs block font-bold tracking-widest text-secondary uppercase">

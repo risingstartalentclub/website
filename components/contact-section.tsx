@@ -13,15 +13,15 @@ export function ContactSection() {
   );
 
   return (
-    <section className="w-full bg-surface-container-low py-space-xl" id="contact">
+    <section className="w-full scroll-mt-20 bg-surface-container-low py-space-xl" id="contact">
       <div className="mx-auto grid max-w-[1280px] gap-gutter px-margin-mobile md:px-margin lg:grid-cols-12">
         <div className="lg:col-span-5">
           <span className="font-label-sm text-label-sm mb-space-xs block font-bold tracking-widest text-secondary uppercase">
             Participant Support
           </span>
-          <h1 className="font-headline-xl text-headline-xl-mobile md:text-headline-xl text-primary">
+          <h2 className="font-headline-xl text-headline-xl-mobile md:text-headline-xl text-primary">
             Contact Us
-          </h1>
+          </h2>
           <p className="font-body-md text-body-md mt-2 max-w-md text-on-surface-variant">
             Our support team helps with submission guidelines, age brackets, and
             child safety standards.

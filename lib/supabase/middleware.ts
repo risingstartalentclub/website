@@ -2,8 +2,19 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isSupabaseConfigured, supabaseEnv } from "@/lib/supabase/env";
 
+function headersForRender(request: NextRequest) {
+  const headers = new Headers(request.headers);
+  // A hard refresh and Chrome's "Disable cache" send these. Next.js treats
+  // them as an order to skip its dev cache and then shows "Cache disabled".
+  headers.delete("cache-control");
+  headers.delete("pragma");
+  return headers;
+}
+
 export async function updateSession(request: NextRequest) {
-  let response = NextResponse.next({ request });
+  let response = NextResponse.next({
+    request: { headers: headersForRender(request) },
+  });
   if (!isSupabaseConfigured()) return response;
 
   const { url, key } = supabaseEnv();
@@ -16,7 +27,9 @@ export async function updateSession(request: NextRequest) {
         cookiesToSet.forEach(({ name, value }) => {
           request.cookies.set(name, value);
         });
-        response = NextResponse.next({ request });
+        response = NextResponse.next({
+          request: { headers: headersForRender(request) },
+        });
         cookiesToSet.forEach(({ name, value, options }) => {
           response.cookies.set(name, value, options);
         });

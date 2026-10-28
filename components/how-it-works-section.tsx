@@ -39,7 +39,7 @@ const steps = [
 export function HowItWorksSection() {
   return (
     <section
-      className="relative w-full overflow-hidden bg-surface-container-lowest py-24"
+      className="relative w-full scroll-mt-20 overflow-hidden bg-surface-container-lowest py-24"
       id="how-it-works"
     >
       <div className="mx-auto max-w-[1280px] px-margin-mobile md:px-margin">

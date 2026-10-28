@@ -25,7 +25,7 @@ export function CompetitionsSection({ items = contests }: { items?: Contest[] })
   }
 
   return (
-    <section className="w-full bg-surface-container-low py-space-xl" id="competitions">
+    <section className="w-full scroll-mt-20 bg-surface-container-low py-space-xl" id="competitions">
       <div className="mx-auto max-w-[1280px] px-margin-mobile md:px-margin">
         <div className="mb-space-lg flex flex-col justify-between gap-space-md md:flex-row md:items-end">
           <div>
@@ -90,11 +90,13 @@ export function CompetitionsSection({ items = contests }: { items?: Contest[] })
                 className="group flex flex-col overflow-hidden rounded-xl border border-surface-variant/60 bg-surface-container-lowest shadow-md transition-all duration-300 hover:shadow-xl"
               >
                 <div className="relative aspect-[16/10] overflow-hidden bg-surface-container">
-                  <img
-                    src={contest.image}
-                    alt={contest.imageAlt}
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
+                  {contest.image ? (
+                    <img
+                      src={contest.image}
+                      alt={contest.imageAlt}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  ) : null}
                   <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
                     <span className="font-label-sm text-label-sm flex items-center gap-1 rounded-full bg-surface-container-lowest/95 px-2.5 py-1 font-bold text-[#0d5c3a] shadow-sm backdrop-blur-sm">
                       <span className="h-2 w-2 animate-pulse rounded-full bg-[#1b8755]" />

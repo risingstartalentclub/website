@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { AdminImages } from "@/components/admin-images";
 import { SiteFrame } from "@/components/site-frame";
-import { getSiteImages } from "@/lib/site-images";
+import { getSiteImages } from "@/lib/get-site-images";
 import { isSupabaseConfigured, supabaseSetupMessage } from "@/lib/supabase/env";
 import { getViewer } from "@/lib/viewer";
 

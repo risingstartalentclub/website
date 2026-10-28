@@ -2,11 +2,14 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { winners, type Winner } from "@/lib/content";
 import { Icon } from "@/components/icon";
-import { getSiteImages, winnersWithImages } from "@/lib/site-images";
+import { getSiteImages } from "@/lib/get-site-images";
+import { winnersWithImages } from "@/lib/site-images";
 
 export function WinnersSection() {
   return (
-    <Suspense fallback={<WinnersView people={winners} />}>
+    <Suspense
+      fallback={<WinnersView people={winners.map((person) => ({ ...person, image: "" }))} />}
+    >
       <WinnersLive />
     </Suspense>
   );
@@ -19,7 +22,7 @@ async function WinnersLive() {
 
 function WinnersView({ people }: { people: Winner[] }) {
   return (
-    <section className="w-full bg-surface-container-lowest py-24" id="winners">
+    <section className="w-full scroll-mt-20 bg-surface-container-lowest py-24" id="winners">
       <div className="mx-auto max-w-[1280px] px-margin-mobile md:px-margin">
         <div className="mb-space-xl flex flex-col justify-between gap-space-md md:flex-row md:items-end">
           <div>
@@ -49,11 +52,15 @@ function WinnersView({ people }: { people: Winner[] }) {
               className="group flex flex-col overflow-hidden rounded-xl bg-surface-container-lowest shadow-md"
             >
               <div className="relative aspect-[4/5] overflow-hidden">
-                <img
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  alt={winner.imageAlt}
-                  src={winner.image}
-                />
+                {winner.image ? (
+                  <img
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    alt={winner.imageAlt}
+                    src={winner.image}
+                  />
+                ) : (
+                  <div className="h-full w-full bg-surface-container" />
+                )}
                 <div className="absolute top-4 left-4">
                   <span
                     className={`font-label-sm text-label-sm flex items-center gap-1 rounded-full px-3 py-1 font-bold shadow-md ${winner.badgeGold ? "bg-tertiary-fixed text-on-tertiary-fixed" : "bg-primary-container text-on-primary"}`}

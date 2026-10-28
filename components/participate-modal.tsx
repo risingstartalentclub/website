@@ -153,7 +153,7 @@ export function ParticipateModal({
           {contest.title}
         </h3>
         <div className="flex flex-col gap-2 rounded-lg bg-surface-container-low p-space-md">
-          <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center justify-between text-base">
             <span className="font-label-md text-label-md text-on-surface-variant">
               Prize Package:
             </span>
@@ -161,7 +161,7 @@ export function ParticipateModal({
               {contest.reward}
             </span>
           </div>
-          <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center justify-between text-base">
             <span className="font-label-md text-label-md text-on-surface-variant">
               Submission Deadline:
             </span>
@@ -169,7 +169,7 @@ export function ParticipateModal({
               {contest.deadline}
             </span>
           </div>
-          <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center justify-between text-base">
             <span className="font-label-md text-label-md text-on-surface-variant">
               Jury Panel:
             </span>

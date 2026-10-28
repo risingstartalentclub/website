@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured, supabaseSetupMessage } from "@/lib/supabase/env";
 import {
@@ -112,6 +112,7 @@ export async function updateSiteImage(
     return { key, error: "The image uploaded, but the site could not use it yet." };
   }
 
+  updateTag("site-images");
   revalidatePath("/", "layout");
   return { key, imageUrl: stored.publicUrl, message: "Image updated. The public site is using it now." };
 }

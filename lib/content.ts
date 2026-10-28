@@ -134,9 +134,9 @@ export const clubRegistration = {
 
 export const navLinks = [
   { href: "/", label: "Home" },
-  { href: "/competitions", label: "Competitions" },
-  { href: "/how-it-works", label: "How It Works" },
-  { href: "/winners", label: "Winners" },
-  { href: "/why-us", label: "Why Us" },
-  { href: "/contact", label: "Contact" },
+  { href: "/#competitions", label: "Competitions" },
+  { href: "/#how-it-works", label: "How It Works" },
+  { href: "/#winners", label: "Winners" },
+  { href: "/#why-us", label: "Why Us" },
+  { href: "/#contact", label: "Contact" },
 ] as const;

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { assets } from "@/lib/content";
-import { getSiteImages } from "@/lib/site-images";
+import { getSiteImages } from "@/lib/get-site-images";
 import { Icon } from "@/components/icon";
 
 const columns = [
@@ -37,7 +36,7 @@ const columns = [
 
 export function SiteFooter() {
   return (
-    <Suspense fallback={<FooterView logo={assets.logo} />}>
+    <Suspense fallback={<FooterView logo="" />}>
       <LiveFooter />
     </Suspense>
   );
@@ -56,12 +55,16 @@ function FooterView({ logo }: { logo: string }) {
           <div className="flex flex-col gap-space-md lg:col-span-4">
             <div className="flex items-center gap-space-sm">
               <div className="inline-block rounded-lg bg-surface-container-lowest/95 p-1.5 shadow-sm">
-                <img
-                  alt="Rising Star Talent Club Logo"
-                  className="h-9 w-auto object-contain"
-                  src={logo}
-                  style={{ mixBlendMode: "multiply" }}
-                />
+                {logo ? (
+                  <img
+                    alt="Rising Star Talent Club Logo"
+                    className="h-9 w-auto object-contain"
+                    src={logo}
+                    style={{ mixBlendMode: "multiply" }}
+                  />
+                ) : (
+                  <span className="block h-9 w-9" />
+                )}
               </div>
               <span className="font-headline-sm text-headline-sm text-on-primary">
                 Rising Star Talent Club

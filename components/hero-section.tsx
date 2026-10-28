@@ -1,11 +1,10 @@
 import { Suspense } from "react";
-import { assets } from "@/lib/content";
 import { Icon } from "@/components/icon";
-import { getSiteImages } from "@/lib/site-images";
+import { getSiteImages } from "@/lib/get-site-images";
 
 export function HeroSection() {
   return (
-    <Suspense fallback={<HeroView stage={assets.heroStage} thumb={assets.heroThumb} />}>
+    <Suspense fallback={<HeroView stage="" thumb="" />}>
       <HeroLive />
     </Suspense>
   );
@@ -18,7 +17,7 @@ async function HeroLive() {
 
 function HeroView({ stage, thumb }: { stage: string; thumb: string }) {
   return (
-    <section className="relative w-full overflow-hidden bg-gradient-to-b from-surface-container-low via-surface to-surface-container-lowest pt-space-xl pb-24">
+    <section id="home" className="relative w-full scroll-mt-20 overflow-hidden bg-gradient-to-b from-surface-container-low via-surface to-surface-container-lowest pt-space-xl pb-24">
       <div className="pointer-events-none absolute -top-32 right-1/4 -z-0 h-[520px] w-[520px] rounded-full bg-tertiary-fixed/35 blur-3xl" />
       <div className="pointer-events-none absolute top-1/3 -left-32 -z-0 h-96 w-96 rounded-full bg-secondary-fixed/40 blur-3xl" />
       <div className="relative z-10 mx-auto max-w-[1280px] px-margin-mobile md:px-margin">
@@ -112,11 +111,15 @@ function HeroView({ stage, thumb }: { stage: string; thumb: string }) {
           <div className="relative mt-space-lg lg:col-span-5 lg:mt-0">
             <div className="relative mx-auto aspect-[4/5] w-full max-w-md">
               <div className="absolute inset-0 flex flex-col overflow-hidden rounded-xl bg-surface-container-lowest shadow-xl">
-                <img
-                  className="h-3/5 w-full object-cover"
-                  alt="An energetic classical and modern Indian performing artist performing on an auditorium stage with warm rim lighting."
-                  src={stage}
-                />
+                {stage ? (
+                  <img
+                    className="h-3/5 w-full object-cover"
+                    alt="Homepage stage photo"
+                    src={stage}
+                  />
+                ) : (
+                  <div className="h-3/5 w-full bg-surface-container" />
+                )}
                 <div className="flex flex-1 flex-col justify-between bg-surface-container-lowest p-space-md">
                   <div>
                     <div className="mb-space-xs flex items-center justify-between">
@@ -168,11 +171,15 @@ function HeroView({ stage, thumb }: { stage: string; thumb: string }) {
                 </div>
               </div>
               <div className="absolute -right-4 -bottom-6 hidden max-w-[210px] items-center gap-space-sm rounded-lg bg-surface-container-lowest p-space-sm shadow-xl sm:flex">
-                <img
-                  className="h-12 w-12 rounded-lg object-cover"
-                  alt="Close up portrait of a smiling contestant in traditional festive attire."
-                  src={thumb}
-                />
+                {thumb ? (
+                  <img
+                    className="h-12 w-12 rounded-lg object-cover"
+                    alt="Homepage portrait"
+                    src={thumb}
+                  />
+                ) : (
+                  <div className="h-12 w-12 rounded-lg bg-surface-container" />
+                )}
                 <div>
                   <span className="font-label-sm text-label-sm font-bold text-secondary">
                     Festive Spotlight
