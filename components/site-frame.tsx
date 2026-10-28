@@ -13,14 +13,14 @@ async function LiveHeader() {
 
 export function SiteFrame({ children }: { children: React.ReactNode }) {
   return (
-    <>
+    <div className="flex min-h-dvh flex-col">
       <Suspense
         fallback={<SiteHeader logo="" signedIn={false} />}
       >
         <LiveHeader />
       </Suspense>
-      <main className="w-full bg-surface pt-16">{children}</main>
+      <main className="w-full flex-1 bg-surface pt-16">{children}</main>
       <SiteFooter />
-    </>
+    </div>
   );
 }
