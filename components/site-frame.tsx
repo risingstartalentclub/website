@@ -5,7 +5,7 @@ import { getSiteImages } from "@/lib/get-site-images";
 import { getViewer } from "@/lib/viewer";
 
 async function LiveHeader() {
-  const [viewer, images] = await Promise.all([getViewer(), getSiteImages()]);
+  const [viewer, images] = await Promise.all([getViewer("public"), getSiteImages()]);
   return (
     <SiteHeader logo={images.logo} signedIn={viewer.signedIn} />
   );

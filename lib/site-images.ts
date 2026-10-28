@@ -1,4 +1,4 @@
-import { assets, contests, winners } from "@/lib/content";
+import { assets, contests, winners, type Contest } from "@/lib/content";
 
 export const siteImageSlots = [
   { key: "logo", label: "Club logo", fallback: assets.logo },
@@ -58,6 +58,19 @@ export function isSafeImageUrl(value: string) {
   } catch {
     return false;
   }
+}
+
+export function applyContestImages(items: Contest[], images: SiteImages) {
+  return items.map((contest) => {
+    const key = `contest:${contest.slug}`;
+    if (!isSiteImageKey(key)) return contest;
+    const uploaded = images[key];
+    const fallback = siteImageSlots.find((slot) => slot.key === key)?.fallback;
+    if (uploaded && uploaded !== fallback && (contest.image === fallback || contest.image === "")) {
+      return { ...contest, image: uploaded };
+    }
+    return contest;
+  });
 }
 
 export function contestsWithImages(images: SiteImages) {

@@ -84,7 +84,7 @@ export async function ProfilePanel() {
             </h1>
             <p className="font-body-md text-body-md text-surface-container-highest">
               {user.email}
-              {profile?.guardian_name
+              {profile?.guardian_name && profile.guardian_name !== name
                 ? ` · Guardian: ${profile.guardian_name}`
                 : ""}
               {typeof user.user_metadata?.phone === "string" && user.user_metadata.phone

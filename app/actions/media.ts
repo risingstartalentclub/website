@@ -47,6 +47,54 @@ function imageKind(bytes: Uint8Array) {
   return null;
 }
 
+export async function uploadAdminImage(
+  file: File,
+): Promise<{ url: string } | { error: string }> {
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "Choose an image to upload." };
+  }
+  if (file.size > maxBytes) {
+    return { error: "Use an image under 5 MB." };
+  }
+  if (!isSupabaseConfigured()) {
+    return { error: supabaseSetupMessage };
+  }
+
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const kind = imageKind(bytes);
+  if (!kind) {
+    return { error: "Use a JPG, PNG, or WebP image." };
+  }
+
+  const supabase = await createClient("admin");
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { error: "Log in with an admin account to change images." };
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (profile?.role !== "admin") {
+    return { error: "Only an admin can change images." };
+  }
+
+  const path = `contests/${crypto.randomUUID()}.${kind.ext}`;
+  const { error: uploadError } = await supabase.storage
+    .from("site-images")
+    .upload(path, bytes, { contentType: kind.type, upsert: false });
+  if (uploadError) {
+    return { error: "The image could not be saved. Run supabase/1-schema.sql so the site-images bucket exists." };
+  }
+
+  const { data: stored } = supabase.storage.from("site-images").getPublicUrl(path);
+  return { url: stored.publicUrl };
+}
+
 export async function updateSiteImage(
   _previous: MediaState,
   formData: FormData,
@@ -73,7 +121,7 @@ export async function updateSiteImage(
     return { key, error: "Use a JPG, PNG, or WebP image." };
   }
 
-  const supabase = await createClient();
+  const supabase = await createClient("admin");
   const {
     data: { user },
   } = await supabase.auth.getUser();

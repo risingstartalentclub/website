@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { LoginForm } from "@/components/login-form";
 import { SiteFrame } from "@/components/site-frame";
-import { adminPath } from "@/lib/admin-path";
 import { safeNextPath } from "@/lib/safe-next";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
@@ -28,8 +27,7 @@ async function SignedInRedirect({
       .select("role")
       .eq("id", user.id)
       .maybeSingle();
-    if (profile?.role === "admin") redirect(adminPath);
-    redirect(nextPath ?? "/profile");
+    if (profile?.role !== "admin") redirect(nextPath ?? "/profile");
   }
   return null;
 }

@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
+import { AdminContests } from "@/components/admin-contests";
 import { AdminImages } from "@/components/admin-images";
+import { BusyScreen } from "@/components/busy-screen";
 import { LogoutButton } from "@/components/logout-button";
 import { adminPath, adminSections, type AdminSectionId } from "@/lib/admin-path";
+import type { Contest } from "@/lib/content";
 import type { SiteImageKey, SiteImages } from "@/lib/site-images";
 
 const AdminReels = dynamic(() =>
@@ -14,7 +17,6 @@ const AdminReels = dynamic(() =>
 
 const imageKeys: Partial<Record<AdminSectionId, SiteImageKey[]>> = {
   home: ["logo", "hero-stage", "hero-thumb"],
-  competitions: ["contest:baby-toddler-festive-look", "contest:diwali-cultural-showcase-2026"],
 };
 
 const sectionCopy: Record<AdminSectionId, { title: string; body: string }> = {
@@ -24,13 +26,23 @@ const sectionCopy: Record<AdminSectionId, { title: string; body: string }> = {
   },
   competitions: {
     title: "Competitions",
-    body: "Replace the contest photos shown on the homepage.",
+    body: "Change any contest card, or add a new one. Saved cards show on the website.",
   },
   winners: {
     title: "Winners",
     body: "Add a reel card, replace a reel link, or delete a card. Changes show in Meet Our Rising Stars.",
   },
 };
+
+function NavPending({ onPending }: { onPending: (pending: boolean) => void }) {
+  const { pending } = useLinkStatus();
+
+  useEffect(() => {
+    onPending(pending);
+  }, [onPending, pending]);
+
+  return null;
+}
 
 function navClass(active: boolean) {
   return active
@@ -43,15 +55,23 @@ export function AdminDesk({
   images,
   reels,
   reelsReady,
+  contests,
+  contestsReady,
 }: {
   section: AdminSectionId;
   images: SiteImages;
   reels: { slot: number; title: string; videoUrl: string }[];
   reelsReady: boolean;
+  contests: Contest[];
+  contestsReady: boolean;
 }) {
   const copy = sectionCopy[section];
   const keys = imageKeys[section];
   const [draftSlots, setDraftSlots] = useState<number[]>([]);
+  const [menuLoading, setMenuLoading] = useState(false);
+  const onMenuPending = useCallback((pending: boolean) => {
+    setMenuLoading(pending);
+  }, []);
 
   function addCard() {
     setDraftSlots((current) => {
@@ -80,11 +100,15 @@ export function AdminDesk({
               className={navClass(section === item.id)}
             >
               {item.label}
+              <NavPending onPending={onMenuPending} />
             </Link>
           ))}
         </nav>
         <div className="mt-auto p-3">
-          <LogoutButton className="font-label-md text-label-md w-full rounded-lg px-3 py-2 text-left text-on-primary/80 hover:bg-on-primary/10">
+          <LogoutButton
+            scope="admin"
+            className="font-label-md text-label-md w-full rounded-lg px-3 py-2 text-left text-on-primary/80 hover:bg-on-primary/10"
+          >
             Log out
           </LogoutButton>
         </div>
@@ -104,9 +128,10 @@ export function AdminDesk({
               }
             >
               {item.label}
+              <NavPending onPending={onMenuPending} />
             </Link>
           ))}
-          <LogoutButton className="font-label-md text-label-md shrink-0 px-3 py-2 text-secondary">
+          <LogoutButton scope="admin" className="font-label-md text-label-md shrink-0 px-3 py-2 text-secondary">
             Log out
           </LogoutButton>
         </div>
@@ -130,6 +155,9 @@ export function AdminDesk({
             ) : null}
           </div>
           {keys ? <AdminImages images={images} keys={keys} /> : null}
+          {section === "competitions" ? (
+            <AdminContests contests={contests} ready={contestsReady} />
+          ) : null}
           {section === "winners" ? (
             <>
               {reelsReady ? null : (
@@ -146,6 +174,7 @@ export function AdminDesk({
           ) : null}
         </div>
       </div>
+      {menuLoading ? <BusyScreen label="Loading..." /> : null}
     </div>
   );
 }

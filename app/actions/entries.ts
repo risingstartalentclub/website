@@ -21,7 +21,7 @@ export async function submitEntry(
   const participantName = String(formData.get("participantName") ?? "").trim();
   const email = normalizeEmail(String(formData.get("email") ?? ""));
   const contestSlug = String(formData.get("contestSlug") ?? "").trim();
-  const contestTitle = knownContests.get(contestSlug);
+  let contestTitle = knownContests.get(contestSlug) ?? null;
 
   if (participantName.length < 2 || participantName.length > 120) {
     return { ok: false, message: "Enter the participant's full name." };
@@ -30,14 +30,24 @@ export async function submitEntry(
   if (invalidEmail) {
     return { ok: false, message: invalidEmail };
   }
-  if (!contestTitle) {
-    return { ok: false, message: "Choose a contest before submitting." };
-  }
   if (!isSupabaseConfigured()) {
     return { ok: false, message: supabaseSetupMessage };
   }
 
   const supabase = await createClient();
+  if (!contestTitle) {
+    const { data: contest } = await supabase
+      .from("contests")
+      .select("title, status")
+      .eq("slug", contestSlug)
+      .maybeSingle();
+    if (contest && contest.status !== "closed" && typeof contest.title === "string") {
+      contestTitle = contest.title;
+    }
+  }
+  if (!contestTitle) {
+    return { ok: false, message: "Choose a contest before submitting." };
+  }
   const {
     data: { user },
   } = await supabase.auth.getUser();

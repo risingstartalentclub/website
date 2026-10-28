@@ -1,8 +1,10 @@
 import { Suspense } from "react";
 import { CompetitionsSection } from "@/components/competitions-section";
 import { contests } from "@/lib/content";
+import { getContests } from "@/lib/get-contests";
 import { getSiteImages } from "@/lib/get-site-images";
-import { contestsWithImages } from "@/lib/site-images";
+import { applyContestImages } from "@/lib/site-images";
+import { getViewer } from "@/lib/viewer";
 
 export function CompetitionsLive() {
   return (
@@ -17,6 +19,15 @@ export function CompetitionsLive() {
 }
 
 async function LiveCompetitions() {
-  const images = await getSiteImages();
-  return <CompetitionsSection items={contestsWithImages(images)} />;
+  const [images, items, viewer] = await Promise.all([
+    getSiteImages(),
+    getContests(),
+    getViewer("public"),
+  ]);
+  return (
+    <CompetitionsSection
+      items={applyContestImages(items, images)}
+      signedIn={viewer.signedIn && !viewer.isAdmin}
+    />
+  );
 }

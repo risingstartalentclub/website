@@ -25,6 +25,7 @@ export type Contest = {
   deadline: string;
   image: string;
   imageAlt: string;
+  status?: "open" | "closed";
 };
 
 export const ageFilters: { id: AgeGroup; label: string }[] = [

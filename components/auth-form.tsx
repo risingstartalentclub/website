@@ -44,6 +44,7 @@ export function AuthForm({
   titleId,
   allowSignup = true,
   adminGate = false,
+  heading,
 }: {
   mode: "login" | "signup";
   nextPath?: string;
@@ -51,6 +52,7 @@ export function AuthForm({
   titleId?: string;
   allowSignup?: boolean;
   adminGate?: boolean;
+  heading?: string;
 }) {
   const action = mode === "signup" ? signUp : adminGate ? signInAdmin : signIn;
   const [state, formAction, pending] = useActionState<AuthState, FormData>(
@@ -62,7 +64,6 @@ export function AuthForm({
   const [mobile, setMobile] = useState("");
   const [fieldErrors, setFieldErrors] = useState<{
     guardianName?: string;
-    fullName?: string;
     mobile?: string;
     email?: string;
     password?: string;
@@ -76,10 +77,6 @@ export function AuthForm({
       if (guardianName.length < 2 || guardianName.length > 120) {
         next.guardianName = "Enter the parent or guardian name.";
       }
-      const fullName = String(data.get("fullName") ?? "").trim();
-      if (fullName.length < 2 || fullName.length > 120) {
-        next.fullName = "Enter the participant's full name.";
-      }
       const invalidMobile = mobileError(String(data.get("mobile") ?? ""));
       if (invalidMobile) next.mobile = invalidMobile;
     }
@@ -91,7 +88,7 @@ export function AuthForm({
     );
     if (invalidPassword) next.password = invalidPassword;
     setFieldErrors(next);
-    if (next.guardianName || next.fullName || next.mobile || next.email || next.password) {
+    if (next.guardianName || next.mobile || next.email || next.password) {
       event.preventDefault();
     }
   }
@@ -99,7 +96,7 @@ export function AuthForm({
   return (
     <form action={formAction} className="flex flex-col gap-space-md" noValidate onSubmit={onSubmit}>
       <h2 id={titleId} className="font-headline-md text-headline-md pr-8 text-primary">
-        {isSignup ? "Sign Up" : "Log In"}
+        {heading ?? (isSignup ? "Sign Up" : "Log In")}
       </h2>
       {!isSignup && nextPath ? <input type="hidden" name="next" value={nextPath} /> : null}
       {isSignup ? (
@@ -119,23 +116,6 @@ export function AuthForm({
             />
             {fieldErrors.guardianName ? (
               <span className="font-body-sm text-body-sm text-error">{fieldErrors.guardianName}</span>
-            ) : null}
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="font-label-sm text-label-sm text-primary">Participant name</span>
-            <input
-              name="fullName"
-              required
-              type="text"
-              autoComplete="name"
-              className={fieldClass}
-              placeholder="e.g. Maya Iyer"
-              minLength={2}
-              maxLength={120}
-              aria-invalid={fieldErrors.fullName ? true : undefined}
-            />
-            {fieldErrors.fullName ? (
-              <span className="font-body-sm text-body-sm text-error">{fieldErrors.fullName}</span>
             ) : null}
           </label>
           <label className="flex flex-col gap-1">

@@ -6,7 +6,13 @@ import { ageFilters, contests, type AgeGroup, type Contest } from "@/lib/content
 import { Icon } from "@/components/icon";
 import { ParticipateModal, type ModalContest } from "@/components/participate-modal";
 
-export function CompetitionsSection({ items = contests }: { items?: Contest[] }) {
+export function CompetitionsSection({
+  items = contests,
+  signedIn = false,
+}: {
+  items?: Contest[];
+  signedIn?: boolean;
+}) {
   const [filter, setFilter] = useState<AgeGroup>("all");
   const [selected, setSelected] = useState<ModalContest | null>(null);
   const visible = items.filter(
@@ -100,7 +106,7 @@ export function CompetitionsSection({ items = contests }: { items?: Contest[] })
                   <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
                     <span className="font-label-sm text-label-sm flex items-center gap-1 rounded-full bg-surface-container-lowest/95 px-2.5 py-1 font-bold text-[#0d5c3a] shadow-sm backdrop-blur-sm">
                       <span className="h-2 w-2 animate-pulse rounded-full bg-[#1b8755]" />
-                      Registrations Open
+                      {contest.status === "closed" ? "Registrations Closed" : "Registrations Open"}
                     </span>
                     <span className="font-label-sm text-label-sm rounded-full bg-tertiary-fixed px-2.5 py-1 font-bold text-on-tertiary-fixed shadow-sm">
                       {contest.ageBadge}
@@ -151,17 +157,30 @@ export function CompetitionsSection({ items = contests }: { items?: Contest[] })
                     >
                       View Contest Details
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => openContest(contest)}
-                      className="font-label-md text-label-md group flex items-center justify-center gap-1.5 rounded-lg bg-primary-container px-space-sm py-3 text-center font-bold text-on-primary shadow-md transition-colors hover:bg-secondary"
-                    >
-                      <span>Participate Now</span>
-                      <Icon
-                        name="arrow_forward"
-                        className="text-[16px] transition-transform group-hover:translate-x-0.5"
-                      />
-                    </button>
+                    {contest.status === "closed" ? null : signedIn ? (
+                      <button
+                        type="button"
+                        onClick={() => openContest(contest)}
+                        className="font-label-md text-label-md group flex items-center justify-center gap-1.5 rounded-lg bg-primary-container px-space-sm py-3 text-center font-bold text-on-primary shadow-md transition-colors hover:bg-secondary"
+                      >
+                        <span>Participate Now</span>
+                        <Icon
+                          name="arrow_forward"
+                          className="text-[16px] transition-transform group-hover:translate-x-0.5"
+                        />
+                      </button>
+                    ) : (
+                      <Link
+                        href="/login"
+                        className="font-label-md text-label-md group flex items-center justify-center gap-1.5 rounded-lg bg-primary-container px-space-sm py-3 text-center font-bold text-on-primary shadow-md transition-colors hover:bg-secondary"
+                      >
+                        <span>Participate Now</span>
+                        <Icon
+                          name="arrow_forward"
+                          className="text-[16px] transition-transform group-hover:translate-x-0.5"
+                        />
+                      </Link>
+                    )}
                   </div>
                 </div>
               </article>

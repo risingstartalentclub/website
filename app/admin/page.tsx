@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import { AdminDesk } from "@/components/admin-desk";
+import { contests as fallbackContests } from "@/lib/content";
+import { contestColumns, contestFromRow, type ContestRow } from "@/lib/get-contests";
 import { adminSection, adminSections } from "@/lib/admin-path";
 import { getSiteImages } from "@/lib/get-site-images";
 import { siteImageSlots, type SiteImages } from "@/lib/site-images";
@@ -27,17 +29,18 @@ async function AdminGate({ section }: { section: string | undefined }) {
     );
   }
 
-  const viewer = await getViewer();
+  const viewer = await getViewer("admin");
   if (!viewer.signedIn) redirect("/admin/login");
   if (!viewer.isAdmin) {
     notFound();
   }
 
   const current = adminSection(section);
-  const needsImages = current === "home" || current === "competitions";
+  const needsImages = current === "home";
   const needsReels = current === "winners";
-  const supabase = needsReels ? await createClient() : null;
-  const [images, reelResult] = await Promise.all([
+  const needsContests = current === "competitions";
+  const supabase = needsReels || needsContests ? await createClient("admin") : null;
+  const [images, reelResult, contestResult] = await Promise.all([
     needsImages ? getSiteImages() : Promise.resolve(localImages()),
     needsReels && supabase
       ? supabase
@@ -46,6 +49,9 @@ async function AdminGate({ section }: { section: string | undefined }) {
           .eq("visible", true)
           .order("slot", { ascending: true })
       : Promise.resolve(null),
+    needsContests && supabase
+      ? supabase.from("contests").select(contestColumns).order("sort_order", { ascending: true })
+      : Promise.resolve(null),
   ]);
 
   return (
@@ -53,6 +59,12 @@ async function AdminGate({ section }: { section: string | undefined }) {
       section={current}
       images={images}
       reelsReady={!reelResult?.error}
+      contestsReady={!contestResult?.error}
+      contests={
+        contestResult?.error
+          ? fallbackContests
+          : (contestResult?.data ?? []).map((row) => contestFromRow(row as ContestRow))
+      }
       reels={(reelResult?.data ?? []).flatMap((row) => {
         const slot = Number(row.slot);
         if (!Number.isInteger(slot) || slot < 1 || typeof row.video_url !== "string") return [];

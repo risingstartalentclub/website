@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { connection } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
-import { hasAuthSessionCookie } from "@/lib/supabase/session-cookie";
+import { hasAuthSessionCookie, type AuthScope } from "@/lib/supabase/session-cookie";
 
 export type Viewer = {
   signedIn: boolean;
@@ -19,14 +19,14 @@ const guest: Viewer = {
   id: null,
 };
 
-export const getViewer = cache(async function getViewer(): Promise<Viewer> {
+export const getViewer = cache(async function getViewer(scope: AuthScope = "public"): Promise<Viewer> {
   if (!isSupabaseConfigured()) return guest;
 
   await connection();
   const cookieStore = await cookies();
-  if (!hasAuthSessionCookie(cookieStore.getAll())) return guest;
+  if (!hasAuthSessionCookie(cookieStore.getAll(), scope)) return guest;
 
-  const supabase = await createClient();
+  const supabase = await createClient(scope);
   const {
     data: { user },
   } = await supabase.auth.getUser();

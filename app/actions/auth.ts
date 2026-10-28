@@ -16,7 +16,6 @@ export async function signUp(
   _previous: AuthState,
   formData: FormData,
 ): Promise<AuthState> {
-  const fullName = String(formData.get("fullName") ?? "").trim();
   const guardianName = String(formData.get("guardianName") ?? "").trim();
   const mobile = String(formData.get("mobile") ?? "");
   const email = normalizeEmail(String(formData.get("email") ?? ""));
@@ -24,9 +23,6 @@ export async function signUp(
 
   if (guardianName.length < 2 || guardianName.length > 120) {
     return { error: "Enter the parent or guardian name." };
-  }
-  if (fullName.length < 2 || fullName.length > 120) {
-    return { error: "Enter the participant's full name." };
   }
   const invalidMobile = mobileError(mobile);
   if (invalidMobile) return { error: invalidMobile };
@@ -44,7 +40,7 @@ export async function signUp(
     password,
     options: {
       data: {
-        full_name: fullName,
+        full_name: guardianName,
         guardian_name: guardianName,
         phone: `+91${normalizeMobile(mobile)}`,
       },
@@ -65,7 +61,7 @@ export async function signUp(
   redirect("/profile");
 }
 
-async function authenticate(formData: FormData) {
+async function authenticate(formData: FormData, scope: "public" | "admin" = "public") {
   const email = normalizeEmail(String(formData.get("email") ?? ""));
   const password = String(formData.get("password") ?? "");
 
@@ -77,7 +73,7 @@ async function authenticate(formData: FormData) {
     return { error: supabaseSetupMessage };
   }
 
-  const supabase = await createClient();
+  const supabase = await createClient(scope);
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error || !data.user) {
     if (error?.code === "invalid_credentials") {
@@ -122,7 +118,7 @@ export async function signInAdmin(
   _previous: AuthState,
   formData: FormData,
 ): Promise<AuthState> {
-  const result = await authenticate(formData);
+  const result = await authenticate(formData, "admin");
   if ("error" in result) return { error: result.error };
 
   if (!result.isAdmin) {
@@ -135,9 +131,11 @@ export async function signInAdmin(
 export async function signOut(formData?: FormData) {
   const requested =
     formData instanceof FormData ? safeNextPath(String(formData.get("next") ?? "")) : null;
+  const scope = formData instanceof FormData && formData.get("scope") === "admin" ? "admin" : "public";
   if (isSupabaseConfigured()) {
-    const supabase = await createClient();
+    const supabase = await createClient(scope);
     await supabase.auth.signOut();
   }
+  if (scope === "admin") redirect("/admin/login");
   redirect(requested && isAdminDestination(requested) ? adminPath : "/");
 }

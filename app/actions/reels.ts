@@ -15,7 +15,7 @@ const reelSetup =
 
 async function requireAdmin() {
   if (!isSupabaseConfigured()) return { supabase: null, error: supabaseSetupMessage };
-  const supabase = await createClient();
+  const supabase = await createClient("admin");
   const {
     data: { user },
   } = await supabase.auth.getUser();

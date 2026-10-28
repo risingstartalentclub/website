@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isSupabaseConfigured, supabaseEnv } from "@/lib/supabase/env";
-import { hasAuthSessionCookie } from "@/lib/supabase/session-cookie";
+import { authCookieName, hasAuthSessionCookie } from "@/lib/supabase/session-cookie";
 
 function headersForRender(request: NextRequest) {
   const headers = new Headers(request.headers);
@@ -16,28 +16,36 @@ export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({
     request: { headers: headersForRender(request) },
   });
-  if (!isSupabaseConfigured() || !hasAuthSessionCookie(request.cookies.getAll())) return response;
+  if (!isSupabaseConfigured()) return response;
+
+  const present = (["public", "admin"] as const).filter((scope) =>
+    hasAuthSessionCookie(request.cookies.getAll(), scope),
+  );
+  if (present.length === 0) return response;
 
   const { url, key } = supabaseEnv();
-  const supabase = createServerClient(url, key, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
+  for (const scope of present) {
+    const name = authCookieName(scope);
+    const supabase = createServerClient(url, key, {
+      cookieOptions: name ? { name } : undefined,
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name: cookieName, value }) => {
+            request.cookies.set(cookieName, value);
+          });
+          response = NextResponse.next({
+            request: { headers: headersForRender(request) },
+          });
+          cookiesToSet.forEach(({ name: cookieName, value, options }) => {
+            response.cookies.set(cookieName, value, options);
+          });
+        },
       },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) => {
-          request.cookies.set(name, value);
-        });
-        response = NextResponse.next({
-          request: { headers: headersForRender(request) },
-        });
-        cookiesToSet.forEach(({ name, value, options }) => {
-          response.cookies.set(name, value, options);
-        });
-      },
-    },
-  });
-
-  await supabase.auth.getUser();
+    });
+    await supabase.auth.getUser();
+  }
   return response;
 }
