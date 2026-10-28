@@ -4,7 +4,7 @@
 -- The contests table is left empty.
 
 create table if not exists public.profiles (
-  id uuid primary key references auth.users (id),
+  id uuid primary key references auth.users (id) on delete cascade,
   full_name text not null,
   guardian_name text,
   phone text,
@@ -48,13 +48,40 @@ create table if not exists public.entries (
   contest_title text not null,
   participant_name text not null,
   email text not null,
-  user_id uuid references auth.users (id),
+  user_id uuid references auth.users (id) on delete set null,
   created_at timestamptz not null default now(),
   constraint entries_name_length check (char_length(participant_name) between 2 and 120),
   constraint entries_email_length check (char_length(email) between 5 and 160),
   constraint entries_slug_length check (char_length(contest_slug) between 2 and 80),
   constraint entries_title_length check (char_length(contest_title) between 2 and 200)
 );
+
+-- Existing databases keep the old links. Replace them so the Users screen can delete an account.
+do $$
+declare
+  link record;
+begin
+  for link in
+    select child.relname as table_name, con.conname
+    from pg_constraint con
+    join pg_class child on child.oid = con.conrelid
+    join pg_namespace child_ns on child_ns.oid = child.relnamespace
+    where con.contype = 'f'
+      and con.confrelid = 'auth.users'::regclass
+      and child_ns.nspname = 'public'
+      and child.relname in ('profiles', 'entries')
+  loop
+    execute format('alter table public.%I drop constraint %I', link.table_name, link.conname);
+  end loop;
+end $$;
+
+alter table public.profiles
+  add constraint profiles_id_fkey
+  foreign key (id) references auth.users (id) on delete cascade;
+
+alter table public.entries
+  add constraint entries_user_id_fkey
+  foreign key (user_id) references auth.users (id) on delete set null;
 
 create table if not exists public.contact_messages (
   id uuid primary key default gen_random_uuid(),
