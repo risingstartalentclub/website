@@ -26,10 +26,15 @@ end $$;
 
 do $$
 begin
-  alter table public.winner_reels
-    add constraint winner_reels_slot_key unique (slot);
-exception
-  when duplicate_object then null;
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'winner_reels_slot_key'
+      and conrelid = 'public.winner_reels'::regclass
+  ) then
+    alter table public.winner_reels
+      add constraint winner_reels_slot_key unique (slot);
+  end if;
 end $$;
 
 alter table public.winner_reels enable row level security;

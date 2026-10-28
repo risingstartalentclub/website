@@ -59,6 +59,7 @@ export function AuthForm({
   );
   const isSignup = mode === "signup";
   const [showPassword, setShowPassword] = useState(false);
+  const [mobile, setMobile] = useState("");
   const [fieldErrors, setFieldErrors] = useState<{
     guardianName?: string;
     fullName?: string;
@@ -147,7 +148,20 @@ export function AuthForm({
               autoComplete="tel"
               className={fieldClass}
               placeholder="98765 43210"
-              maxLength={16}
+              maxLength={10}
+              pattern="[6-9][0-9]{9}"
+              value={mobile}
+              onChange={(event) => {
+                const digits = event.target.value.replace(/\D/g, "").slice(0, 10);
+                setMobile(digits);
+                setFieldErrors((current) => ({
+                  ...current,
+                  mobile:
+                    digits && !/^[6-9]/.test(digits)
+                      ? "Enter a 10-digit mobile number starting with 6, 7, 8, or 9."
+                      : undefined,
+                }));
+              }}
               aria-invalid={fieldErrors.mobile ? true : undefined}
             />
             {fieldErrors.mobile ? (
