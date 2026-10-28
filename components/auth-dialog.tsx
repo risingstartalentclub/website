@@ -31,12 +31,13 @@ export function AuthDialog({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[90] flex items-center justify-center bg-primary/60 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[90] overflow-y-auto bg-primary/60 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-labelledby="auth-dialog-title"
     >
-      <div className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl bg-surface-container-lowest p-space-lg shadow-2xl">
+      <div className="flex min-h-full items-center justify-center">
+      <div className="relative my-auto w-full max-w-md rounded-xl bg-surface-container-lowest p-space-lg shadow-2xl">
         <button
           type="button"
           aria-label="Close"
@@ -51,6 +52,7 @@ export function AuthDialog({
           titleId="auth-dialog-title"
           onSwitch={() => onMode(mode === "login" ? "signup" : "login")}
         />
+      </div>
       </div>
     </div>,
     document.body,

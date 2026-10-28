@@ -21,6 +21,24 @@ export function emailError(value: string) {
   return null;
 }
 
+export function normalizeMobile(value: string) {
+  let digits = value.trim().replace(/[^\d]/g, "");
+  if (digits.length === 12 && digits.startsWith("91")) digits = digits.slice(2);
+  if (digits.length === 11 && digits.startsWith("0")) digits = digits.slice(1);
+  return digits;
+}
+
+export function mobileError(value: string) {
+  const raw = value.trim();
+  if (!raw) return "Enter a mobile number.";
+  if (/[a-z]/i.test(raw)) return "Enter a 10-digit mobile number.";
+  const digits = normalizeMobile(raw);
+  if (!/^[6-9]\d{9}$/.test(digits)) {
+    return "Enter a 10-digit mobile number starting with 6, 7, 8, or 9.";
+  }
+  return null;
+}
+
 export function passwordError(value: string, mode: "login" | "signup") {
   if (!value) return "Enter a password.";
   if (value.length > 72) return "Use a password of 72 characters or fewer.";

@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { useActionState, useState, type FormEvent } from "react";
-import { signIn, signUp, type AuthState } from "@/app/actions/auth";
-import { emailError, passwordError } from "@/lib/validation";
+import { signIn, signInAdmin, signUp, type AuthState } from "@/app/actions/auth";
+import { emailError, mobileError, passwordError } from "@/lib/validation";
 
 const fieldClass =
-  "font-body-md text-body-md w-full rounded-lg bg-surface px-3 py-2 text-on-surface shadow-sm outline-none focus:bg-surface-container-lowest";
+  "font-body-md text-body-md w-full rounded-lg bg-surface px-3 py-2 text-on-surface shadow-sm outline-none placeholder:text-[14px] placeholder:leading-5 focus:bg-surface-container-lowest";
 
 function PasswordEye({ hidden }: { hidden: boolean }) {
   return (
@@ -42,13 +42,17 @@ export function AuthForm({
   nextPath,
   onSwitch,
   titleId,
+  allowSignup = true,
+  adminGate = false,
 }: {
   mode: "login" | "signup";
   nextPath?: string;
   onSwitch?: () => void;
   titleId?: string;
+  allowSignup?: boolean;
+  adminGate?: boolean;
 }) {
-  const action = mode === "login" ? signIn : signUp;
+  const action = mode === "signup" ? signUp : adminGate ? signInAdmin : signIn;
   const [state, formAction, pending] = useActionState<AuthState, FormData>(
     action,
     null,
@@ -56,7 +60,9 @@ export function AuthForm({
   const isSignup = mode === "signup";
   const [showPassword, setShowPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<{
+    guardianName?: string;
     fullName?: string;
+    mobile?: string;
     email?: string;
     password?: string;
   }>({});
@@ -65,10 +71,16 @@ export function AuthForm({
     const data = new FormData(event.currentTarget);
     const next: typeof fieldErrors = {};
     if (isSignup) {
+      const guardianName = String(data.get("guardianName") ?? "").trim();
+      if (guardianName.length < 2 || guardianName.length > 120) {
+        next.guardianName = "Enter the parent or guardian name.";
+      }
       const fullName = String(data.get("fullName") ?? "").trim();
       if (fullName.length < 2 || fullName.length > 120) {
         next.fullName = "Enter the participant's full name.";
       }
+      const invalidMobile = mobileError(String(data.get("mobile") ?? ""));
+      if (invalidMobile) next.mobile = invalidMobile;
     }
     const invalidEmail = emailError(String(data.get("email") ?? ""));
     if (invalidEmail) next.email = invalidEmail;
@@ -78,7 +90,9 @@ export function AuthForm({
     );
     if (invalidPassword) next.password = invalidPassword;
     setFieldErrors(next);
-    if (next.fullName || next.email || next.password) event.preventDefault();
+    if (next.guardianName || next.fullName || next.mobile || next.email || next.password) {
+      event.preventDefault();
+    }
   }
 
   return (
@@ -90,7 +104,24 @@ export function AuthForm({
       {isSignup ? (
         <>
           <label className="flex flex-col gap-1">
-            <span className="font-label-sm text-label-sm text-primary">Participant full name</span>
+            <span className="font-label-sm text-label-sm text-primary">Parent or guardian name</span>
+            <input
+              name="guardianName"
+              required
+              type="text"
+              autoComplete="name"
+              className={fieldClass}
+              placeholder="e.g. Priya Iyer"
+              minLength={2}
+              maxLength={120}
+              aria-invalid={fieldErrors.guardianName ? true : undefined}
+            />
+            {fieldErrors.guardianName ? (
+              <span className="font-body-sm text-body-sm text-error">{fieldErrors.guardianName}</span>
+            ) : null}
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="font-label-sm text-label-sm text-primary">Participant name</span>
             <input
               name="fullName"
               required
@@ -107,14 +138,21 @@ export function AuthForm({
             ) : null}
           </label>
           <label className="flex flex-col gap-1">
-            <span className="font-label-sm text-label-sm text-primary">Parent or guardian name</span>
+            <span className="font-label-sm text-label-sm text-primary">Mobile number</span>
             <input
-              name="guardianName"
-              type="text"
-              autoComplete="name"
+              name="mobile"
+              required
+              type="tel"
+              inputMode="numeric"
+              autoComplete="tel"
               className={fieldClass}
-              placeholder="Required for participants under 18"
+              placeholder="98765 43210"
+              maxLength={16}
+              aria-invalid={fieldErrors.mobile ? true : undefined}
             />
+            {fieldErrors.mobile ? (
+              <span className="font-body-sm text-body-sm text-error">{fieldErrors.mobile}</span>
+            ) : null}
           </label>
         </>
       ) : null}
@@ -181,35 +219,37 @@ export function AuthForm({
       >
         {pending ? "Please wait..." : isSignup ? "Create Free Account" : "Log In"}
       </button>
-      <p className="font-body-sm text-body-sm text-on-surface-variant">
-        {isSignup ? (
-          <>
-            Already have an account?{" "}
-            {onSwitch ? (
-              <button type="button" onClick={onSwitch} className="font-semibold text-secondary">
-                Log In
-              </button>
-            ) : (
-              <Link href="/login" className="font-semibold text-secondary">
-                Log In
-              </Link>
-            )}
-          </>
-        ) : (
-          <>
-            New to the club?{" "}
-            {onSwitch ? (
-              <button type="button" onClick={onSwitch} className="font-semibold text-secondary">
-                Sign Up
-              </button>
-            ) : (
-              <Link href="/signup" className="font-semibold text-secondary">
-                Sign Up
-              </Link>
-            )}
-          </>
-        )}
-      </p>
+      {allowSignup ? (
+        <p className="font-body-sm text-body-sm text-on-surface-variant">
+          {isSignup ? (
+            <>
+              Already have an account?{" "}
+              {onSwitch ? (
+                <button type="button" onClick={onSwitch} className="font-semibold text-secondary">
+                  Log In
+                </button>
+              ) : (
+                <Link href="/login" className="font-semibold text-secondary">
+                  Log In
+                </Link>
+              )}
+            </>
+          ) : (
+            <>
+              New to the club?{" "}
+              {onSwitch ? (
+                <button type="button" onClick={onSwitch} className="font-semibold text-secondary">
+                  Sign Up
+                </button>
+              ) : (
+                <Link href="/signup" className="font-semibold text-secondary">
+                  Sign Up
+                </Link>
+              )}
+            </>
+          )}
+        </p>
+      ) : null}
     </form>
   );
 }

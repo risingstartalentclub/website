@@ -50,7 +50,7 @@ async function LiveFooter() {
 function FooterView({ logo }: { logo: string }) {
   return (
     <footer className="w-full bg-primary-container text-surface-variant">
-      <div className="mx-auto max-w-[1280px] px-margin pt-space-xl pb-space-lg">
+      <div className="mx-auto max-w-[1280px] px-5 pt-space-xl pb-space-lg md:px-margin">
         <div className="grid grid-cols-1 gap-gutter pb-space-xl md:grid-cols-2 lg:grid-cols-12">
           <div className="flex flex-col gap-space-md lg:col-span-4">
             <div className="flex items-center gap-space-sm">

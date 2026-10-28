@@ -1,26 +1,23 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { winners, type Winner } from "@/lib/content";
 import { Icon } from "@/components/icon";
-import { getSiteImages } from "@/lib/get-site-images";
-import { winnersWithImages } from "@/lib/site-images";
+import { WinnerReels } from "@/components/winner-reels";
+import { getWinnerReels } from "@/lib/get-winner-reels";
+import type { PlayableReel } from "@/lib/reels";
 
 export function WinnersSection() {
   return (
-    <Suspense
-      fallback={<WinnersView people={winners.map((person) => ({ ...person, image: "" }))} />}
-    >
+    <Suspense fallback={<WinnersView reels={[]} />}>
       <WinnersLive />
     </Suspense>
   );
 }
 
 async function WinnersLive() {
-  const images = await getSiteImages();
-  return <WinnersView people={winnersWithImages(images)} />;
+  return <WinnersView reels={await getWinnerReels()} />;
 }
 
-function WinnersView({ people }: { people: Winner[] }) {
+function WinnersView({ reels }: { reels: PlayableReel[] }) {
   return (
     <section className="w-full scroll-mt-20 bg-surface-container-lowest py-24" id="winners">
       <div className="mx-auto max-w-[1280px] px-margin-mobile md:px-margin">
@@ -45,60 +42,7 @@ function WinnersView({ people }: { people: Winner[] }) {
             <Icon name="workspace_premium" className="text-[18px]" />
           </Link>
         </div>
-        <div className="grid grid-cols-1 gap-gutter md:grid-cols-3">
-          {people.map((winner) => (
-            <article
-              key={winner.name}
-              className="group flex flex-col overflow-hidden rounded-xl bg-surface-container-lowest shadow-md"
-            >
-              <div className="relative aspect-[4/5] overflow-hidden">
-                {winner.image ? (
-                  <img
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    alt={winner.imageAlt}
-                    src={winner.image}
-                  />
-                ) : (
-                  <div className="h-full w-full bg-surface-container" />
-                )}
-                <div className="absolute top-4 left-4">
-                  <span
-                    className={`font-label-sm text-label-sm flex items-center gap-1 rounded-full px-3 py-1 font-bold shadow-md ${winner.badgeGold ? "bg-tertiary-fixed text-on-tertiary-fixed" : "bg-primary-container text-on-primary"}`}
-                  >
-                    <Icon name={winner.badgeIcon} className="text-[14px]" />
-                    {winner.badge}
-                  </span>
-                </div>
-                <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-primary/80 to-transparent" />
-                <div className="absolute right-4 bottom-4 left-4 text-on-primary">
-                  <h3 className="font-headline-md text-headline-md font-bold text-on-primary">
-                    {winner.name}
-                  </h3>
-                  <p
-                    className={`font-label-sm text-label-sm ${winner.badgeGold ? "text-tertiary-fixed" : "text-secondary-fixed"}`}
-                  >
-                    {winner.contest}
-                  </p>
-                </div>
-              </div>
-              <div className="flex flex-1 flex-col justify-between bg-surface-container-low p-space-lg">
-                <p className="font-body-sm text-body-sm text-on-surface-variant italic">
-                  &quot;{winner.quote}&quot;
-                </p>
-                <div className="font-label-sm text-label-sm mt-space-md flex items-center justify-between pt-space-sm text-on-surface-variant">
-                  <span className="flex items-center gap-1">
-                    <Icon
-                      name="verified"
-                      className="text-[16px] text-tertiary-container"
-                    />
-                    Verified Title
-                  </span>
-                  <span>{winner.title}</span>
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
+        <WinnerReels reels={reels} />
       </div>
     </section>
   );

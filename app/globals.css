@@ -175,3 +175,52 @@ body {
 .no-scrollbar {
   scrollbar-width: none;
 }
+
+@keyframes reel-crawl {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.reel-track {
+  animation: reel-crawl 40s linear infinite;
+}
+
+.reel-track:hover,
+.reel-track:focus-within {
+  animation-play-state: paused;
+}
+
+/* Phones have no hover, so the row stays still and can be swiped. */
+@media (hover: none), (max-width: 767px) {
+  .reel-row {
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+  }
+
+  .reel-track {
+    animation: none;
+    transform: none;
+  }
+
+  .reel-track [data-reel-copy] {
+    display: none;
+  }
+
+  .reel-row article {
+    scroll-snap-align: start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reel-track {
+    animation: none;
+  }
+
+  .reel-track [data-reel-copy] {
+    display: none;
+  }
+}

@@ -97,10 +97,17 @@ function ImageCard({
   );
 }
 
-export function AdminImages({ images }: { images: SiteImages }) {
+export function AdminImages({
+  images,
+  keys,
+}: {
+  images: SiteImages;
+  keys?: SiteImageKey[];
+}) {
+  const slots = keys ? siteImageSlots.filter((slot) => keys.includes(slot.key)) : siteImageSlots;
   return (
-    <div className="grid grid-cols-1 gap-gutter md:grid-cols-2">
-      {siteImageSlots.map((slot) => (
+    <div className="grid grid-cols-1 gap-gutter xl:grid-cols-2">
+      {slots.map((slot) => (
         <ImageCard
           key={slot.key}
           imageKey={slot.key}

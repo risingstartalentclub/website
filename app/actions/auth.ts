@@ -2,9 +2,10 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { adminPath, isAdminDestination } from "@/lib/admin-path";
 import { safeNextPath } from "@/lib/safe-next";
 import { isSupabaseConfigured, supabaseSetupMessage } from "@/lib/supabase/env";
-import { emailError, normalizeEmail, passwordError } from "@/lib/validation";
+import { emailError, mobileError, normalizeEmail, normalizeMobile, passwordError } from "@/lib/validation";
 
 export type AuthState = {
   error?: string;
@@ -17,15 +18,18 @@ export async function signUp(
 ): Promise<AuthState> {
   const fullName = String(formData.get("fullName") ?? "").trim();
   const guardianName = String(formData.get("guardianName") ?? "").trim();
+  const mobile = String(formData.get("mobile") ?? "");
   const email = normalizeEmail(String(formData.get("email") ?? ""));
   const password = String(formData.get("password") ?? "");
 
+  if (guardianName.length < 2 || guardianName.length > 120) {
+    return { error: "Enter the parent or guardian name." };
+  }
   if (fullName.length < 2 || fullName.length > 120) {
     return { error: "Enter the participant's full name." };
   }
-  if (guardianName.length > 120) {
-    return { error: "Guardian name is too long." };
-  }
+  const invalidMobile = mobileError(mobile);
+  if (invalidMobile) return { error: invalidMobile };
   const invalidEmail = emailError(email);
   if (invalidEmail) return { error: invalidEmail };
   const invalidPassword = passwordError(password, "signup");
@@ -42,6 +46,7 @@ export async function signUp(
       data: {
         full_name: fullName,
         guardian_name: guardianName,
+        phone: `+91${normalizeMobile(mobile)}`,
       },
     },
   });
@@ -60,10 +65,7 @@ export async function signUp(
   redirect("/profile");
 }
 
-export async function signIn(
-  _previous: AuthState,
-  formData: FormData,
-): Promise<AuthState> {
+async function authenticate(formData: FormData) {
   const email = normalizeEmail(String(formData.get("email") ?? ""));
   const password = String(formData.get("password") ?? "");
 
@@ -77,29 +79,65 @@ export async function signIn(
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) {
-    if (error.code === "invalid_credentials") {
+  if (error || !data.user) {
+    if (error?.code === "invalid_credentials") {
       return { error: "Those login details did not match an account." };
     }
     return { error: "We could not log you in. Please try again in a moment." };
   }
 
-  const nextPath = safeNextPath(String(formData.get("next") ?? ""));
-  if (nextPath) redirect(nextPath);
-
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")
-    .eq("id", data.user?.id ?? "")
+    .eq("id", data.user.id)
     .maybeSingle();
-  redirect(profile?.role === "admin" ? "/admin" : "/profile");
+
+  return {
+    supabase,
+    isAdmin: profile?.role === "admin",
+    nextPath: safeNextPath(String(formData.get("next") ?? "")),
+  };
 }
 
-export async function signOut() {
-  if (!isSupabaseConfigured()) {
-    redirect("/");
+export async function signIn(
+  _previous: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
+  const result = await authenticate(formData);
+  if ("error" in result) return { error: result.error };
+
+  if (result.isAdmin) {
+    await result.supabase.auth.signOut();
+    return { error: "Those login details did not match an account." };
   }
-  const supabase = await createClient();
-  await supabase.auth.signOut();
-  redirect("/");
+  if (result.nextPath && isAdminDestination(result.nextPath)) {
+    await result.supabase.auth.signOut();
+    return { error: "This account cannot open that page." };
+  }
+  if (result.nextPath) redirect(result.nextPath);
+  redirect("/profile");
+}
+
+export async function signInAdmin(
+  _previous: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
+  const result = await authenticate(formData);
+  if ("error" in result) return { error: result.error };
+
+  if (!result.isAdmin) {
+    await result.supabase.auth.signOut();
+    return { error: "This account cannot open that page." };
+  }
+  redirect(adminPath);
+}
+
+export async function signOut(formData?: FormData) {
+  const requested =
+    formData instanceof FormData ? safeNextPath(String(formData.get("next") ?? "")) : null;
+  if (isSupabaseConfigured()) {
+    const supabase = await createClient();
+    await supabase.auth.signOut();
+  }
+  redirect(requested && isAdminDestination(requested) ? adminPath : "/");
 }

@@ -7,8 +7,8 @@ create extension if not exists pgcrypto with schema extensions;
 
 do $$
 declare
-  admin_email text := 'admin@example.com';
-  admin_password text := 'ChangeMe123';
+  admin_email text := '';
+  admin_password text := '';
   admin_id uuid;
 begin
   select id into admin_id
@@ -85,8 +85,4 @@ begin
     where user_id = admin_id
       and provider = 'email'
   );
-
-  update public.profiles
-  set role = 'admin'
-  where id = admin_id;
 end $$;

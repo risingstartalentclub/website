@@ -97,7 +97,7 @@ export async function updateSiteImage(
   if (uploadError) {
     return {
       key,
-      error: "The image could not be saved. Run supabase/schema.sql so the site-images bucket exists.",
+      error: "The image could not be saved. Run supabase/1-schema.sql so the site-images bucket exists.",
     };
   }
 

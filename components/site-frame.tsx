@@ -7,11 +7,7 @@ import { getViewer } from "@/lib/viewer";
 async function LiveHeader() {
   const [viewer, images] = await Promise.all([getViewer(), getSiteImages()]);
   return (
-    <SiteHeader
-      logo={images.logo}
-      signedIn={viewer.signedIn}
-      isAdmin={viewer.isAdmin}
-    />
+    <SiteHeader logo={images.logo} signedIn={viewer.signedIn} />
   );
 }
 
@@ -19,7 +15,7 @@ export function SiteFrame({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Suspense
-        fallback={<SiteHeader logo="" signedIn={false} isAdmin={false} />}
+        fallback={<SiteHeader logo="" signedIn={false} />}
       >
         <LiveHeader />
       </Suspense>

@@ -1,97 +1,110 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
-import { AdminImages } from "@/components/admin-images";
-import { SiteFrame } from "@/components/site-frame";
+import { AdminDesk } from "@/components/admin-desk";
+import { adminSection, adminSections } from "@/lib/admin-path";
 import { getSiteImages } from "@/lib/get-site-images";
+import { siteImageSlots, type SiteImages } from "@/lib/site-images";
 import { isSupabaseConfigured, supabaseSetupMessage } from "@/lib/supabase/env";
+import { createClient } from "@/lib/supabase/server";
 import { getViewer } from "@/lib/viewer";
 
-export const metadata: Metadata = { title: "Admin" };
+export const metadata: Metadata = {
+  title: "Admin",
+  robots: { index: false, follow: false },
+};
 
-function AdminMessage({
-  title,
-  body,
-  href,
-  action,
-}: {
-  title: string;
-  body: string;
-  href?: string;
-  action?: string;
-}) {
-  return (
-    <section className="w-full bg-surface py-space-xl">
-      <div className="mx-auto flex max-w-[720px] flex-col gap-space-md px-margin-mobile md:px-margin">
-        <h1 className="font-headline-xl text-headline-xl-mobile text-primary md:text-headline-xl">
-          {title}
-        </h1>
-        <p className="font-body-md text-body-md text-on-surface-variant">{body}</p>
-        {href && action ? (
-          <Link
-            href={href}
-            className="font-label-lg text-label-lg self-start rounded-lg bg-primary-container px-space-md py-space-sm text-on-primary"
-          >
-            {action}
-          </Link>
-        ) : null}
-      </div>
-    </section>
-  );
+function localImages(): SiteImages {
+  return Object.fromEntries(siteImageSlots.map((slot) => [slot.key, slot.fallback])) as SiteImages;
 }
 
-async function AdminGate() {
+async function AdminGate({ section }: { section: string | undefined }) {
   if (!isSupabaseConfigured()) {
-    return <AdminMessage title="Admin" body={supabaseSetupMessage} />;
+    return (
+      <div className="flex h-dvh items-center justify-center bg-surface px-4">
+        <p className="font-body-md text-body-md max-w-lg text-on-surface-variant">{supabaseSetupMessage}</p>
+      </div>
+    );
   }
 
   const viewer = await getViewer();
-  if (!viewer.signedIn) {
-    return (
-      <AdminMessage
-        title="Admin"
-        body="Log in with an admin account to change the club images."
-        href="/login?next=/admin"
-        action="Log In"
-      />
-    );
-  }
-
+  if (!viewer.signedIn) redirect("/admin/login");
   if (!viewer.isAdmin) {
-    return (
-      <AdminMessage
-        title="Admin access"
-        body={`This account cannot change images yet. In the Supabase SQL editor, run: update public.profiles set role = 'admin' where id = '${viewer.id}'; Then open this page again.`}
-      />
-    );
+    notFound();
   }
 
-  const images = await getSiteImages();
+  const current = adminSection(section);
+  const needsImages = current === "home" || current === "competitions";
+  const needsReels = current === "winners";
+  const supabase = needsReels ? await createClient() : null;
+  const [images, reelResult] = await Promise.all([
+    needsImages ? getSiteImages() : Promise.resolve(localImages()),
+    needsReels && supabase
+      ? supabase
+          .from("winner_reels")
+          .select("id, title, video_url, slot")
+          .eq("visible", true)
+          .order("slot", { ascending: true })
+      : Promise.resolve(null),
+  ]);
+
   return (
-    <section className="w-full bg-surface py-space-md">
-      <div className="mx-auto flex max-w-[1280px] flex-col gap-space-md px-4 sm:px-6 lg:px-margin">
-        <div className="max-w-3xl">
-          <h1 className="font-headline-xl text-headline-xl-mobile text-primary md:text-headline-xl">
-            Site images
-          </h1>
-          <p className="font-body-md text-body-md mt-space-sm text-on-surface-variant">
-            Replace the logo, homepage photos, contest photos, and winner
-            portraits. Use a JPG, PNG, or WebP under 5 MB. The public site
-            shows the new image after you save.
-          </p>
-        </div>
-        <AdminImages images={images} />
-      </div>
-    </section>
+    <AdminDesk
+      section={current}
+      images={images}
+      reelsReady={!reelResult?.error}
+      reels={(reelResult?.data ?? []).flatMap((row) => {
+        const slot = Number(row.slot);
+        if (!Number.isInteger(slot) || slot < 1 || typeof row.video_url !== "string") return [];
+        return [
+          {
+            slot,
+            title: typeof row.title === "string" ? row.title : "",
+            videoUrl: row.video_url,
+          },
+        ];
+      })}
+    />
   );
 }
 
-export default function AdminPage() {
+function DeskFrame() {
   return (
-    <SiteFrame>
-      <Suspense fallback={null}>
-        <AdminGate />
-      </Suspense>
-    </SiteFrame>
+    <div className="min-h-dvh bg-surface md:pl-60">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden h-dvh w-60 flex-col bg-primary-container text-on-primary md:flex">
+        <div className="px-4 py-6">
+          <p className="font-label-sm text-label-sm tracking-widest text-tertiary-fixed uppercase">Rising Star</p>
+          <p className="font-headline-sm text-headline-sm">Admin</p>
+        </div>
+        <nav className="flex flex-col gap-1 px-3">
+          {adminSections.map((item) => (
+            <span key={item.id} className="font-label-md text-label-md rounded-lg px-3 py-2 text-on-primary/80">
+              {item.label}
+            </span>
+          ))}
+        </nav>
+      </aside>
+    </div>
   );
+}
+
+export default function AdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ section?: string }>;
+}) {
+  return (
+    <Suspense fallback={<DeskFrame />}>
+      <AdminLoader searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+async function AdminLoader({
+  searchParams,
+}: {
+  searchParams: Promise<{ section?: string }>;
+}) {
+  const { section } = await searchParams;
+  return <AdminGate section={section} />;
 }

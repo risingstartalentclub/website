@@ -1,7 +1,9 @@
 import { cache } from "react";
+import { cookies } from "next/headers";
 import { connection } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { hasAuthSessionCookie } from "@/lib/supabase/session-cookie";
 
 export type Viewer = {
   signedIn: boolean;
@@ -21,6 +23,9 @@ export const getViewer = cache(async function getViewer(): Promise<Viewer> {
   if (!isSupabaseConfigured()) return guest;
 
   await connection();
+  const cookieStore = await cookies();
+  if (!hasAuthSessionCookie(cookieStore.getAll())) return guest;
+
   const supabase = await createClient();
   const {
     data: { user },

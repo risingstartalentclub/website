@@ -3,22 +3,18 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type MouseEvent } from "react";
-import { AuthDialog } from "@/components/auth-dialog";
 import { navLinks } from "@/lib/content";
 
 export function SiteHeader({
   logo,
   signedIn,
-  isAdmin,
 }: {
   logo: string;
   signedIn: boolean;
-  isAdmin: boolean;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [menuPath, setMenuPath] = useState(pathname);
-  const [authMode, setAuthMode] = useState<"login" | "signup" | null>(null);
   const [hash, setHash] = useState("");
 
   if (menuPath !== pathname) {
@@ -100,32 +96,20 @@ export function SiteHeader({
 
         <div className="ml-auto flex shrink-0 items-center gap-2">
           {signedIn ? (
-            <>
-              {isAdmin ? (
-                <Link
-                  href="/admin"
-                  aria-current={pathname.startsWith("/admin") ? "page" : undefined}
-                  className="font-label-md text-label-md hidden rounded-lg bg-primary-container px-3 py-2 font-bold text-on-primary lg:inline"
-                >
-                  Admin
-                </Link>
-              ) : null}
-              <Link
-                href="/profile"
-                aria-label="Your account"
-                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-container text-on-primary"
-              >
-                <span className="material-symbols-outlined text-[18px]">person</span>
-              </Link>
-            </>
+            <Link
+              href="/profile"
+              aria-label="Your account"
+              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-container text-on-primary"
+            >
+              <span className="material-symbols-outlined text-[18px]">person</span>
+            </Link>
           ) : (
-            <button
-              type="button"
-              className="font-label-lg text-label-lg rounded-lg bg-primary-container px-space-md py-space-sm text-on-primary transition-colors hover:bg-secondary"
-              onClick={() => setAuthMode("login")}
+            <Link
+              href="/login"
+              className="font-label-lg text-label-lg shrink-0 whitespace-nowrap rounded-lg bg-primary-container px-3 py-2 text-on-primary transition-colors hover:bg-secondary"
             >
               Log In
-            </button>
+            </Link>
           )}
           <button
             type="button"
@@ -142,7 +126,7 @@ export function SiteHeader({
       </div>
 
       {open ? (
-        <nav className="border-t border-surface-variant bg-surface-container-lowest px-margin-mobile py-space-md lg:hidden">
+        <nav className="max-h-[calc(100dvh-4rem)] overflow-y-auto border-t border-surface-variant bg-surface-container-lowest px-4 py-4 lg:hidden">
           <div className="mx-auto flex max-w-[1280px] flex-col gap-space-sm">
             {navLinks.map((link) => (
               <Link
@@ -162,21 +146,13 @@ export function SiteHeader({
               <Link href="/profile" className="font-label-lg text-label-lg text-primary">
                 Your account
               </Link>
-            ) : null}
-            {signedIn && isAdmin ? (
-              <Link href="/admin" className="font-label-lg text-label-lg text-primary">
-                Admin
+            ) : (
+              <Link href="/login" className="font-label-lg text-label-lg text-primary">
+                Log In
               </Link>
-            ) : null}
+            )}
           </div>
         </nav>
-      ) : null}
-      {authMode ? (
-        <AuthDialog
-          mode={authMode}
-          onClose={() => setAuthMode(null)}
-          onMode={setAuthMode}
-        />
       ) : null}
     </header>
   );

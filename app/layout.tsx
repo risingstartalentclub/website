@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
+import { DevMark } from "@/components/dev-mark";
 import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -21,9 +22,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${plusJakarta.variable} h-full`}>
       <body
-        className={`${plusJakarta.className} min-h-full bg-surface font-body-md text-body-md text-on-surface antialiased`}
+        className={`${plusJakarta.className} min-h-full overflow-x-clip bg-surface font-body-md text-body-md text-on-surface antialiased`}
       >
         {children}
+        {process.env.NODE_ENV === "development" ? <DevMark /> : null}
       </body>
     </html>
   );

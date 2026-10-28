@@ -15,4 +15,4 @@ export function supabaseEnv() {
 }
 
 export const supabaseSetupMessage =
-  "Supabase is not connected yet. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local, then run supabase/schema.sql in the Supabase SQL editor.";
+  "Supabase is not connected yet. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local, then run supabase/1-schema.sql in the Supabase SQL editor.";

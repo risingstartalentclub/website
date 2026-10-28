@@ -9,9 +9,9 @@ export default function PrivacyPage() {
     <SiteFrame>
       <InfoPage eyebrow="Legal & Compliance" title="Privacy Policy">
         <p>
-          We store the account name, optional guardian name, email, and the
-          contest entries you submit. Contact messages store the name, email,
-          and message you send.
+          We store the participant name, parent or guardian name, mobile
+          number, email, and the contest entries you submit. Contact messages
+          store the name, email, and message you send.
         </p>
         <p>
           Entries are visible to the signed-in member who submitted them. They

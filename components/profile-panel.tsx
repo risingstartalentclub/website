@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { connection } from "next/server";
-import { signOut } from "@/app/actions/auth";
+import { redirect } from "next/navigation";
+import { adminPath } from "@/lib/admin-path";
+import { LogoutButton } from "@/components/logout-button";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 
@@ -20,7 +22,7 @@ export async function ProfilePanel() {
     return (
       <Notice
         title="Connect Supabase to open profiles"
-        body="Add the project URL and anon key in .env.local, then run supabase/schema.sql. Accounts and saved entries will appear here."
+        body="Add the project URL and anon key in .env.local, then run supabase/1-schema.sql. Accounts and saved entries will appear here."
       />
     );
   }
@@ -44,7 +46,7 @@ export async function ProfilePanel() {
   const [profileResult, entriesResult] = await Promise.all([
     supabase
       .from("profiles")
-      .select("full_name, guardian_name")
+      .select("full_name, guardian_name, role")
       .eq("id", user.id)
       .maybeSingle(),
     supabase
@@ -64,6 +66,7 @@ export async function ProfilePanel() {
   }
 
   const profile = profileResult.data;
+  if (profile?.role === "admin") redirect(adminPath);
   const entries = entriesResult.data ?? [];
 
   const name = profile?.full_name || user.email || "Participant";
@@ -84,16 +87,14 @@ export async function ProfilePanel() {
               {profile?.guardian_name
                 ? ` · Guardian: ${profile.guardian_name}`
                 : ""}
+              {typeof user.user_metadata?.phone === "string" && user.user_metadata.phone
+                ? ` · ${user.user_metadata.phone}`
+                : ""}
             </p>
           </div>
-          <form action={signOut}>
-            <button
-              type="submit"
-              className="font-label-lg text-label-lg rounded-lg bg-surface-container-lowest px-space-lg py-3 text-primary transition-colors hover:bg-surface-container"
-            >
-              Log Out
-            </button>
-          </form>
+          <LogoutButton className="font-label-lg text-label-lg rounded-lg bg-surface-container-lowest px-space-lg py-3 text-primary transition-colors hover:bg-surface-container">
+            Log Out
+          </LogoutButton>
         </div>
 
         <div className="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm">

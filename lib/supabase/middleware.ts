@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isSupabaseConfigured, supabaseEnv } from "@/lib/supabase/env";
+import { hasAuthSessionCookie } from "@/lib/supabase/session-cookie";
 
 function headersForRender(request: NextRequest) {
   const headers = new Headers(request.headers);
@@ -15,7 +16,7 @@ export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({
     request: { headers: headersForRender(request) },
   });
-  if (!isSupabaseConfigured()) return response;
+  if (!isSupabaseConfigured() || !hasAuthSessionCookie(request.cookies.getAll())) return response;
 
   const { url, key } = supabaseEnv();
   const supabase = createServerClient(url, key, {
