@@ -6,19 +6,22 @@ import { getSiteImages } from "@/lib/get-site-images";
 import { applyContestImages } from "@/lib/site-images";
 import { getViewer } from "@/lib/viewer";
 
-export function CompetitionsLive() {
+export function CompetitionsLive({ limit }: { limit?: number }) {
   return (
     <Suspense
       fallback={
-        <CompetitionsSection items={contests.map((contest) => ({ ...contest, image: "" }))} />
+        <CompetitionsSection
+          limit={limit}
+          items={contests.map((contest) => ({ ...contest, image: "" })).slice(0, limit)}
+        />
       }
     >
-      <LiveCompetitions />
+      <LiveCompetitions limit={limit} />
     </Suspense>
   );
 }
 
-async function LiveCompetitions() {
+async function LiveCompetitions({ limit }: { limit?: number }) {
   const [images, items, viewer] = await Promise.all([
     getSiteImages(),
     getContests(),
@@ -27,7 +30,8 @@ async function LiveCompetitions() {
   return (
     <CompetitionsSection
       items={applyContestImages(items, images)}
-      signedIn={viewer.signedIn && !viewer.isAdmin}
+      limit={limit}
+      signedIn={viewer.signedIn}
     />
   );
 }

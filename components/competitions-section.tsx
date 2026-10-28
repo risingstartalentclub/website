@@ -4,31 +4,21 @@ import { useState } from "react";
 import Link from "next/link";
 import { ageFilters, contests, type AgeGroup, type Contest } from "@/lib/content";
 import { Icon } from "@/components/icon";
-import { ParticipateModal, type ModalContest } from "@/components/participate-modal";
 
 export function CompetitionsSection({
   items = contests,
+  limit,
   signedIn = false,
 }: {
   items?: Contest[];
+  limit?: number;
   signedIn?: boolean;
 }) {
   const [filter, setFilter] = useState<AgeGroup>("all");
-  const [selected, setSelected] = useState<ModalContest | null>(null);
   const visible = items.filter(
     (contest) => filter === "all" || contest.ageGroup === filter,
   );
-
-  function openContest(contest: Contest) {
-    setSelected({
-      slug: contest.slug,
-      title: contest.title,
-      categoryLabel: contest.categoryLabel,
-      reward: contest.reward,
-      fee: contest.fee,
-      deadline: contest.deadline,
-    });
-  }
+  const shown = typeof limit === "number" ? visible.slice(0, limit) : visible;
 
   return (
     <section className="w-full scroll-mt-20 bg-surface-container-low py-space-xl" id="competitions">
@@ -47,16 +37,18 @@ export function CompetitionsSection({
               to shine with Rising Star Talent Club.
             </p>
           </div>
-          <Link
-            href="/competitions"
-            className="font-label-lg text-label-lg group inline-flex items-center gap-1.5 self-start font-semibold text-secondary transition-colors hover:text-primary md:self-auto"
-          >
-            <span>Explore All Contests</span>
-            <Icon
-              name="arrow_forward"
-              className="text-[18px] transition-transform group-hover:translate-x-1"
-            />
-          </Link>
+          {typeof limit === "number" ? (
+            <Link
+              href="/competitions"
+              className="font-label-lg text-label-lg group inline-flex items-center gap-1.5 self-start font-semibold text-secondary transition-colors hover:text-primary md:self-auto"
+            >
+              <span>Explore All Contests</span>
+              <Icon
+                name="arrow_forward"
+                className="text-[18px] transition-transform group-hover:translate-x-1"
+              />
+            </Link>
+          ) : null}
         </div>
 
         <div className="no-scrollbar mb-space-lg flex items-center gap-space-sm overflow-x-auto pb-space-sm">
@@ -80,7 +72,7 @@ export function CompetitionsSection({
         </div>
 
         <div className="grid grid-cols-1 gap-gutter md:grid-cols-2">
-          {visible.length === 0 ? (
+          {shown.length === 0 ? (
             <div className="rounded-xl bg-surface-container-lowest p-space-lg text-center shadow-sm md:col-span-2">
               <h3 className="font-headline-sm text-headline-sm text-primary">
                 No open contests in this age group yet.
@@ -90,7 +82,7 @@ export function CompetitionsSection({
               </p>
             </div>
           ) : (
-            visible.map((contest) => (
+            shown.map((contest) => (
               <article
                 key={contest.slug}
                 className="group flex flex-col overflow-hidden rounded-xl border border-surface-variant/60 bg-surface-container-lowest shadow-md transition-all duration-300 hover:shadow-xl"
@@ -149,29 +141,10 @@ export function CompetitionsSection({
                       {contest.reward}
                     </span>
                   </div>
-                  <div className="grid grid-cols-2 items-center gap-space-sm">
-                    <button
-                      type="button"
-                      onClick={() => openContest(contest)}
-                      className="font-label-md text-label-md rounded-lg bg-surface-container px-space-sm py-3 text-center font-semibold text-primary transition-colors hover:bg-surface-container-high"
-                    >
-                      View Contest Details
-                    </button>
-                    {contest.status === "closed" ? null : signedIn ? (
-                      <button
-                        type="button"
-                        onClick={() => openContest(contest)}
-                        className="font-label-md text-label-md group flex items-center justify-center gap-1.5 rounded-lg bg-primary-container px-space-sm py-3 text-center font-bold text-on-primary shadow-md transition-colors hover:bg-secondary"
-                      >
-                        <span>Participate Now</span>
-                        <Icon
-                          name="arrow_forward"
-                          className="text-[16px] transition-transform group-hover:translate-x-0.5"
-                        />
-                      </button>
-                    ) : (
+                  <div>
+                    {contest.status === "closed" ? null : (
                       <Link
-                        href="/login"
+                        href={signedIn ? "/profile" : "/login"}
                         className="font-label-md text-label-md group flex items-center justify-center gap-1.5 rounded-lg bg-primary-container px-space-sm py-3 text-center font-bold text-on-primary shadow-md transition-colors hover:bg-secondary"
                       >
                         <span>Participate Now</span>
@@ -188,20 +161,21 @@ export function CompetitionsSection({
           )}
         </div>
 
-        <div className="mt-space-xl text-center">
-          <Link
-            href="/competitions"
-            className="font-label-lg text-label-lg group inline-flex items-center gap-2 rounded-lg border border-outline-variant/60 bg-surface-container-lowest px-space-xl py-3 font-semibold text-primary shadow-sm transition-all hover:bg-surface-container hover:shadow-md"
-          >
-            <span>Explore All Contests (Active, Upcoming & Past)</span>
-            <Icon
-              name="arrow_forward"
-              className="text-[18px] text-secondary transition-transform group-hover:translate-x-1"
-            />
-          </Link>
-        </div>
+        {typeof limit === "number" ? (
+          <div className="mt-space-xl text-center">
+            <Link
+              href="/competitions"
+              className="font-label-lg text-label-lg group inline-flex items-center gap-2 rounded-lg border border-outline-variant/60 bg-surface-container-lowest px-space-xl py-3 font-semibold text-primary shadow-sm transition-all hover:bg-surface-container hover:shadow-md"
+            >
+              <span>Explore All Contests (Active, Upcoming & Past)</span>
+              <Icon
+                name="arrow_forward"
+                className="text-[18px] text-secondary transition-transform group-hover:translate-x-1"
+              />
+            </Link>
+          </div>
+        ) : null}
       </div>
-      <ParticipateModal contest={selected} onClose={() => setSelected(null)} />
     </section>
   );
 }

@@ -37,6 +37,10 @@ function ContestEditor({ contest }: { contest: Contest | null }) {
     };
   }, [pickedUrl]);
 
+  useEffect(() => {
+    if (state?.message) setViewing(false);
+  }, [state?.message]);
+
   function chooseImage() {
     fileRef.current?.click();
   }
@@ -46,6 +50,7 @@ function ContestEditor({ contest }: { contest: Contest | null }) {
       {current ? <input type="hidden" name="slug" value={current.slug} /> : null}
       <input type="hidden" name="image" value={current?.image ?? ""} />
       <input type="hidden" name="imageAlt" value={current?.imageAlt ?? ""} />
+      <input type="hidden" name="fee" value={current?.fee || "Free Entry"} />
       <input
         ref={fileRef}
         name="file"
@@ -105,10 +110,6 @@ function ContestEditor({ contest }: { contest: Contest | null }) {
             <label className="flex flex-col gap-1">
               <span className="font-label-sm text-label-sm text-primary">Reward</span>
               <input name="reward" required defaultValue={current?.reward ?? ""} className={fieldClass} maxLength={120} />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="font-label-sm text-label-sm text-primary">Fee</span>
-              <input name="fee" required defaultValue={current?.fee ?? "Free Entry"} className={fieldClass} maxLength={40} />
             </label>
           </div>
           <label className="flex items-center gap-2">
@@ -176,13 +177,23 @@ function ContestEditor({ contest }: { contest: Contest | null }) {
             ) : (
               <p className="font-body-md text-body-md mt-8 text-on-surface-variant">No image yet.</p>
             )}
-            <button
-              type="button"
-              onClick={chooseImage}
-              className="font-label-md text-label-md rounded-lg bg-primary-container px-4 py-2 font-bold text-on-primary"
-            >
-              Change image
-            </button>
+            {state?.error ? <p className="font-body-sm text-body-sm text-error">{state.error}</p> : null}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={chooseImage}
+                className="font-label-md text-label-md rounded-lg bg-surface-container px-4 py-2 font-bold text-primary"
+              >
+                Change image
+              </button>
+              <button
+                type="submit"
+                disabled={pending}
+                className="font-label-md text-label-md rounded-lg bg-primary-container px-4 py-2 font-bold text-on-primary disabled:opacity-70"
+              >
+                {pending ? "Saving..." : "Save"}
+              </button>
+            </div>
           </div>
         </div>
       ) : null}
