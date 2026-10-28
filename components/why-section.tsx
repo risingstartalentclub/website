@@ -3,9 +3,9 @@ import { Icon } from "@/components/icon";
 const reasons = [
   {
     icon: "diversity_1",
-    title: "Contests for Different Age Groups",
-    body: "Tailored, age-appropriate contest brackets for babies (1-3), kids (4-8), pre-teens (9-13), and teens & youth (14-20).",
-    link: "Age brackets 1–20",
+    title: "Contests for Every Talent",
+    body: "Open contests for festive looks, cultural performances, and creative challenges.",
+    link: "Open to every young star",
     gold: false,
   },
   {

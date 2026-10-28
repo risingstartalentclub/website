@@ -9,9 +9,8 @@ export default function RulesPage() {
     <SiteFrame>
       <InfoPage eyebrow="Fair Play Guidelines" title="Competition Rules">
         <p>
-          Enter only the age bracket the participant qualifies for. One free
-          confirmation is enough to hold a place; follow the emailed guidelines
-          for the actual photo, video, or artwork.
+          One free confirmation is enough to hold a place. Follow the emailed
+          guidelines for the actual photo, video, or artwork.
         </p>
         <p>
           Work must be the participant&apos;s own, suitable for a family audience,
@@ -23,8 +22,8 @@ export default function RulesPage() {
           contest card.
         </p>
         <p>
-          The club may disqualify an entry for a false age, copied work, or
-          content that is unsafe for other young participants.
+          The club may disqualify an entry for copied work or content that is
+          unsafe for other young participants.
         </p>
       </InfoPage>
     </SiteFrame>

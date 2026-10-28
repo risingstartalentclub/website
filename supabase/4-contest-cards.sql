@@ -2,7 +2,6 @@
 -- It does not delete contests, profiles, entries, reels, or the admin account.
 
 alter table public.contests add column if not exists image_alt text not null default '';
-alter table public.contests add column if not exists age_badge text not null default '';
 alter table public.contests add column if not exists ends_label text not null default '';
 alter table public.contests add column if not exists ends_urgent boolean not null default false;
 alter table public.contests add column if not exists reward_icon text not null default 'emoji_events';
@@ -50,17 +49,18 @@ create policy "Admins delete contests"
 
 grant insert, update, delete on public.contests to authenticated;
 
+alter table public.contests drop column if exists age_group;
+alter table public.contests drop column if exists age_badge;
+
 insert into public.contests (
-  slug, title, category_label, age_group, age_badge, reward, reward_icon, fee,
+  slug, title, category_label, reward, reward_icon, fee,
   deadline, ends_label, ends_urgent, description, image_url, image_alt, status, sort_order
 )
 values
   (
     'baby-toddler-festive-look',
     'Baby & Toddler Festive Look',
-    'Baby & Toddler (Ages 1-3)',
-    'baby',
-    'Ages 1–3 Years',
+    'Festive Look',
     '₹25,000 + Golden Star Trophy',
     'emoji_events',
     'Free Entry',
@@ -76,9 +76,7 @@ values
   (
     'diwali-cultural-showcase-2026',
     'Diwali & Cultural Showcase 2026',
-    'Kids & Juniors (Ages 4-12)',
-    'kids',
-    'Ages 4–12 Years',
+    'Cultural Showcase',
     '₹35,000 + Certificate & Medal',
     'military_tech',
     'Free Entry',

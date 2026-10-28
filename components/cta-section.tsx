@@ -56,7 +56,7 @@ export function CtaSection() {
               {[
                 "No Hidden Registration Fees",
                 "Verified E-Certificates",
-                "Ages 1–20 Welcome",
+                "Family Friendly & Safe",
               ].map((item) => (
                 <span key={item} className="flex items-center gap-1">
                   <Icon

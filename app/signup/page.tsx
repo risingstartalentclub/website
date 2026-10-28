@@ -6,7 +6,7 @@ import { SiteFrame } from "@/components/site-frame";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Sign Up" };
+export const metadata: Metadata = { title: "Register" };
 
 async function SignupGate() {
   if (isSupabaseConfigured()) {

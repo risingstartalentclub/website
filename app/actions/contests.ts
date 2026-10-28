@@ -13,6 +13,8 @@ export type ContestState = {
 
 const setupMessage =
   "Run supabase/4-contest-cards.sql once in the Supabase SQL editor, then save the card again.";
+const heroSqlMessage =
+  "Run supabase/6-hero-and-people.sql once in the Supabase SQL editor, then save the card again.";
 
 function slugify(title: string) {
   return title
@@ -45,8 +47,6 @@ async function requireAdmin() {
 function cardFromForm(formData: FormData) {
   const title = text(formData, "title", 120);
   const description = text(formData, "description", 400);
-  const ageGroup = text(formData, "ageGroup", 20);
-  const ageBadge = text(formData, "ageBadge", 40);
   const categoryLabel = text(formData, "categoryLabel", 80);
   const endsLabel = text(formData, "endsLabel", 80);
   const deadline = text(formData, "deadline", 40);
@@ -55,14 +55,12 @@ function cardFromForm(formData: FormData) {
   const imageAlt = text(formData, "imageAlt", 160);
   const status = text(formData, "status", 20) === "closed" ? "closed" : "open";
   const endsUrgent = formData.get("endsUrgent") === "on";
+  const isHero = formData.get("isHero") === "on";
 
   if (title.length < 2) return { error: "Enter the contest title." };
   if (description.length < 10) return { error: "Enter a short description." };
-  if (ageGroup !== "baby" && ageGroup !== "kids" && ageGroup !== "teens") {
-    return { error: "Choose an age group." };
-  }
-  if (ageBadge.length < 2 || categoryLabel.length < 2 || endsLabel.length < 2 || deadline.length < 2) {
-    return { error: "Fill in the age badge, category, end label, and deadline." };
+  if (categoryLabel.length < 2 || endsLabel.length < 2 || deadline.length < 2) {
+    return { error: "Fill in the category, end label, and deadline." };
   }
   if (reward.length < 2 || fee.length < 2) return { error: "Enter the reward and the entry fee." };
 
@@ -70,8 +68,6 @@ function cardFromForm(formData: FormData) {
     row: {
       title,
       description,
-      age_group: ageGroup,
-      age_badge: ageBadge,
       category_label: categoryLabel,
       ends_label: endsLabel,
       ends_urgent: endsUrgent,
@@ -80,12 +76,16 @@ function cardFromForm(formData: FormData) {
       fee,
       image_alt: imageAlt || title,
       status,
-      reward_icon: ageGroup === "kids" ? "military_tech" : "emoji_events",
+      is_hero: isHero,
     },
   };
 }
 
 function failed(error: { code?: string; message?: string }) {
+  if (error.code === "23502" && error.message?.includes("age_")) {
+    return "Run supabase/5-remove-age-groups.sql once in the Supabase SQL editor, then save the card again.";
+  }
+  if (error.code === "42703" && error.message?.includes("is_hero")) return heroSqlMessage;
   if (error.code === "42P01" || error.code === "42703" || error.message?.includes("contests")) {
     return setupMessage;
   }
@@ -121,12 +121,28 @@ export async function saveContest(_previous: ContestState, formData: FormData): 
     sortOrder = Number(latest?.[0]?.sort_order ?? 0) + 1;
   }
 
+  if (parsed.row.is_hero) {
+    const { error: clearError } = await admin.supabase
+      .from("contests")
+      .update({ is_hero: false })
+      .eq("is_hero", true)
+      .neq("slug", slug);
+    if (clearError) return { error: failed(clearError) };
+  }
+
   const row = { ...parsed.row, image_url: image };
   const { error } = existing
     ? await admin.supabase.from("contests").update(row).eq("slug", slug)
-    : await admin.supabase.from("contests").insert({ ...row, slug, sort_order: sortOrder });
+    : await admin.supabase
+        .from("contests")
+        .insert({ ...row, slug, sort_order: sortOrder, reward_icon: "emoji_events" });
 
-  if (error) return { error: error.code === "23505" ? "A contest with this name already exists." : failed(error) };
+  if (error) {
+    if (error.code === "23505" && error.message?.includes("one_hero")) {
+      return { error: "Another contest is already on the homepage. Save this card again to replace it." };
+    }
+    return { error: error.code === "23505" ? "A contest with this name already exists." : failed(error) };
+  }
 
   updateTag("contests");
   revalidatePath("/", "layout");

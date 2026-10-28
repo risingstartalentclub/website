@@ -46,7 +46,15 @@ function ContestEditor({ contest }: { contest: Contest | null }) {
   }
 
   return (
-    <form action={action} className="flex flex-col gap-3 rounded-xl bg-surface-container-lowest p-4 shadow-sm">
+    <form
+      action={action}
+      className={`flex flex-col gap-3 rounded-xl bg-surface-container-lowest p-4 shadow-sm ${current?.isHero ? "ring-2 ring-tertiary-fixed-dim" : ""}`}
+    >
+      {current?.isHero ? (
+        <p className="font-label-sm text-label-sm inline-flex w-fit items-center gap-1 rounded-full bg-tertiary-fixed px-2.5 py-1 text-on-tertiary-fixed">
+          Homepage contest
+        </p>
+      ) : null}
       {current ? <input type="hidden" name="slug" value={current.slug} /> : null}
       <input type="hidden" name="image" value={current?.image ?? ""} />
       <input type="hidden" name="imageAlt" value={current?.imageAlt ?? ""} />
@@ -77,18 +85,6 @@ function ContestEditor({ contest }: { contest: Contest | null }) {
           </label>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="flex flex-col gap-1">
-              <span className="font-label-sm text-label-sm text-primary">Age group</span>
-              <select name="ageGroup" defaultValue={current?.ageGroup ?? "baby"} className={fieldClass}>
-                <option value="baby">Baby & Toddler (1–3)</option>
-                <option value="kids">Kids & Juniors (4–12)</option>
-                <option value="teens">Teens & Youth (13–20)</option>
-              </select>
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="font-label-sm text-label-sm text-primary">Age badge</span>
-              <input name="ageBadge" required defaultValue={current?.ageBadge ?? ""} className={fieldClass} maxLength={40} placeholder="Ages 1–3 Years" />
-            </label>
-            <label className="flex flex-col gap-1">
               <span className="font-label-sm text-label-sm text-primary">Category</span>
               <input name="categoryLabel" required defaultValue={current?.categoryLabel ?? ""} className={fieldClass} maxLength={80} />
             </label>
@@ -115,6 +111,12 @@ function ContestEditor({ contest }: { contest: Contest | null }) {
           <label className="flex items-center gap-2">
             <input name="endsUrgent" type="checkbox" defaultChecked={current?.endsUrgent ?? false} />
             <span className="font-body-sm text-body-sm text-on-surface">Show the end label as urgent</span>
+          </label>
+          <label className="flex items-start gap-2">
+            <input name="isHero" type="checkbox" defaultChecked={current?.isHero ?? false} className="mt-1" />
+            <span className="font-body-sm text-body-sm text-on-surface">
+              Show this contest on the homepage. Only one contest can be featured. Saving replaces the current homepage contest.
+            </span>
           </label>
         </div>
         <div className="flex w-full shrink-0 flex-col gap-2 sm:w-36">
@@ -214,7 +216,7 @@ export function AdminContests({
     <div className="flex flex-col gap-4">
       {ready ? null : (
         <p className="font-body-md text-body-md text-error">
-          Run supabase/4-contest-cards.sql once in the Supabase SQL editor, then open Competitions again.
+          Run supabase/4-contest-cards.sql and supabase/6-hero-and-people.sql once in the Supabase SQL editor, then open Contests again.
         </p>
       )}
       <div className="flex justify-end">

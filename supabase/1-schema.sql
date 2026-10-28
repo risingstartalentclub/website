@@ -29,7 +29,6 @@ create table if not exists public.contests (
   slug text not null unique,
   title text not null,
   category_label text not null,
-  age_group text not null,
   reward text not null,
   fee text not null,
   deadline text not null,

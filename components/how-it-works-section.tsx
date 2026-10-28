@@ -15,7 +15,7 @@ const steps = [
     label: "Step 02",
     icon: "search",
     title: "Find Your Favorite Contest",
-    body: "Explore exciting contests and check the eligible age group and participation rules.",
+    body: "Explore exciting contests and check the participation rules.",
     gold: false,
   },
   {
@@ -106,7 +106,7 @@ export function HowItWorksSection() {
             className="font-label-md text-label-md rounded-lg bg-primary px-space-md py-3 whitespace-nowrap text-on-primary shadow-sm transition-colors hover:bg-secondary"
             href="/registration-help"
           >
-            Browse Age Guidelines
+            Registration Help
           </Link>
         </div>
       </div>

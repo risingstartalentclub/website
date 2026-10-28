@@ -1,21 +1,25 @@
 import { Suspense } from "react";
 import { Icon } from "@/components/icon";
+import type { Contest } from "@/lib/content";
+import { getContests } from "@/lib/get-contests";
 import { getSiteImages } from "@/lib/get-site-images";
+import { applyContestImages } from "@/lib/site-images";
 
 export function HeroSection() {
   return (
-    <Suspense fallback={<HeroView stage="" thumb="" />}>
+    <Suspense fallback={<HeroView contest={null} />}>
       <HeroLive />
     </Suspense>
   );
 }
 
 async function HeroLive() {
-  const images = await getSiteImages();
-  return <HeroView stage={images["hero-stage"]} thumb={images["hero-thumb"]} />;
+  const [images, items] = await Promise.all([getSiteImages(), getContests()]);
+  const hero = applyContestImages(items, images).find((item) => item.isHero) ?? null;
+  return <HeroView contest={hero} />;
 }
 
-function HeroView({ stage, thumb }: { stage: string; thumb: string }) {
+function HeroView({ contest }: { contest: Contest | null }) {
   return (
     <section id="home" className="relative w-full scroll-mt-20 overflow-hidden bg-gradient-to-b from-surface-container-low via-surface to-surface-container-lowest pt-space-xl pb-24">
       <div className="pointer-events-none absolute -top-32 right-1/4 -z-0 h-[520px] w-[520px] rounded-full bg-tertiary-fixed/35 blur-3xl" />
@@ -27,9 +31,6 @@ function HeroView({ stage, thumb }: { stage: string; thumb: string }) {
               <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-tertiary-container" />
               <span className="font-label-sm text-label-sm tracking-wider text-secondary uppercase">
                 Autumn & Festive Season 2026
-              </span>
-              <span className="font-label-sm text-label-sm rounded-full bg-tertiary-fixed px-2 py-0.5 font-bold text-on-tertiary-container">
-                Contests for Ages 1–20
               </span>
             </div>
             <h1 className="font-display-lg text-display-lg-mobile md:text-display-lg tracking-tight text-primary">
@@ -72,7 +73,9 @@ function HeroView({ stage, thumb }: { stage: string; thumb: string }) {
               </a>
               <a
                 className="font-label-lg text-label-lg inline-flex items-center justify-center gap-space-sm rounded-lg bg-surface-container-lowest px-space-lg py-4 text-primary shadow-sm transition-colors hover:bg-surface-container"
-                href="#how-it-works"
+                href="https://www.instagram.com/risingstartalentclub"
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 <Icon name="how_to_reg" className="text-[20px] text-secondary" />
                 <span>Join the Club</span>
@@ -110,82 +113,60 @@ function HeroView({ stage, thumb }: { stage: string; thumb: string }) {
 
           <div className="relative mt-space-lg lg:col-span-5 lg:mt-0">
             <div className="relative mx-auto aspect-[4/5] w-full max-w-md">
-              <div className="absolute inset-0 flex flex-col overflow-hidden rounded-xl bg-surface-container-lowest shadow-xl">
-                {stage ? (
-                  <img
-                    className="h-3/5 w-full object-cover"
-                    alt="Homepage stage photo"
-                    src={stage}
-                  />
+              <a
+                href="#competitions"
+                className="absolute inset-0 flex flex-col overflow-hidden rounded-xl bg-surface-container-lowest shadow-xl"
+              >
+                {contest?.image ? (
+                  <img className="h-3/5 w-full object-cover" alt={contest.imageAlt} src={contest.image} />
                 ) : (
                   <div className="h-3/5 w-full bg-surface-container" />
                 )}
                 <div className="flex flex-1 flex-col justify-between bg-surface-container-lowest p-space-md">
                   <div>
-                    <div className="mb-space-xs flex items-center justify-between">
-                      <span className="font-label-sm text-label-sm rounded-full bg-surface-container px-2 py-0.5 font-bold text-secondary">
-                        Ages 1–20 Showcase
+                    <div className="mb-space-xs flex items-center justify-between gap-2">
+                      <span className="font-label-sm text-label-sm rounded-full bg-tertiary-fixed px-2 py-0.5 font-bold text-on-tertiary-fixed">
+                        Homepage contest
                       </span>
-                      <span className="font-label-sm text-label-sm rounded-full bg-tertiary-fixed px-2 py-0.5 text-on-tertiary-container">
-                        Parent Verified
+                      <span className="font-label-sm text-label-sm rounded-full bg-surface-container px-2 py-0.5 font-bold text-secondary">
+                        {contest ? contest.categoryLabel : "Coming soon"}
                       </span>
                     </div>
                     <h3 className="font-headline-sm text-headline-sm text-primary">
-                      All-Stars Youth Arena
+                      {contest?.title ?? "A featured contest will appear here"}
                     </h3>
-                    <p className="font-body-sm text-body-sm mt-1 text-on-surface-variant">
-                      Celebrating adorable toddlers, budding artists, and
-                      inspiring teen creators across India.
+                    <p className="font-body-sm text-body-sm mt-1 line-clamp-3 text-on-surface-variant">
+                      {contest?.description ??
+                        "The contest marked for the homepage is shown here, with one card below."}
                     </p>
                   </div>
-                  <div className="flex items-center justify-between pt-2">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="font-label-sm text-label-sm whitespace-nowrap rounded-full bg-secondary-container px-2 py-1 text-on-secondary-container">
-                        1–3
-                      </span>
-                      <span className="font-label-sm text-label-sm whitespace-nowrap rounded-full bg-tertiary-fixed px-2 py-1 text-on-tertiary-fixed">
-                        4–12
-                      </span>
-                      <span className="font-label-sm text-label-sm whitespace-nowrap rounded-full bg-primary-fixed px-2 py-1 text-on-primary-fixed">
-                        13–20
-                      </span>
-                    </div>
-                    <span className="font-label-md text-label-md flex items-center gap-1 font-semibold text-secondary">
-                      <Icon name="verified" className="text-[16px]" />
-                      Certified Entries
+                  <div className="flex items-center justify-between gap-2 pt-2">
+                    <span className="font-label-md text-label-md font-semibold text-primary">
+                      {contest?.reward ?? "Reward announced soon"}
                     </span>
+                    <span className="font-label-sm text-label-sm text-secondary">{contest?.endsLabel ?? ""}</span>
                   </div>
                 </div>
-              </div>
-              <div className="absolute -top-5 -left-6 flex items-center gap-space-sm rounded-lg bg-primary-container p-space-sm text-on-primary shadow-lg">
+              </a>
+              <div className="pointer-events-none absolute -top-5 -left-6 flex items-center gap-space-sm rounded-lg bg-primary-container p-space-sm text-on-primary shadow-lg">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-tertiary-fixed text-on-tertiary-fixed">
                   <Icon name="workspace_premium" className="text-[18px]" />
                 </div>
                 <div>
-                  <p className="font-label-sm text-label-sm text-tertiary-fixed uppercase">
-                    Verified Honors
-                  </p>
+                  <p className="font-label-sm text-label-sm text-tertiary-fixed uppercase">Featured</p>
                   <p className="font-label-md text-label-md font-bold">
-                    Certificates & Awards
+                    {contest?.status === "closed" ? "Registrations closed" : "Registrations open"}
                   </p>
                 </div>
               </div>
-              <div className="absolute -right-4 -bottom-6 hidden max-w-[210px] items-center gap-space-sm rounded-lg bg-surface-container-lowest p-space-sm shadow-xl sm:flex">
-                {thumb ? (
-                  <img
-                    className="h-12 w-12 rounded-lg object-cover"
-                    alt="Homepage portrait"
-                    src={thumb}
-                  />
-                ) : (
-                  <div className="h-12 w-12 rounded-lg bg-surface-container" />
-                )}
-                <div>
-                  <span className="font-label-sm text-label-sm font-bold text-secondary">
-                    Festive Spotlight
-                  </span>
+              <div className="pointer-events-none absolute -right-4 -bottom-6 hidden max-w-[220px] items-center gap-space-sm rounded-lg bg-surface-container-lowest p-space-sm shadow-xl sm:flex">
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-tertiary-fixed text-on-tertiary-fixed">
+                  <Icon name={contest?.rewardIcon || "emoji_events"} filled className="text-[22px]" />
+                </div>
+                <div className="min-w-0">
+                  <span className="font-label-sm text-label-sm font-bold text-secondary">Reward</span>
                   <p className="font-label-md text-label-md truncate font-bold text-primary">
-                    100% Free Entries
+                    {contest?.fee ?? "Free Entry"}
                   </p>
                 </div>
               </div>

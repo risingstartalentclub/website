@@ -4,9 +4,13 @@ import { Suspense } from "react";
 import { AdminDesk } from "@/components/admin-desk";
 import { contests as fallbackContests } from "@/lib/content";
 import { contestColumns, contestFromRow, type ContestRow } from "@/lib/get-contests";
-import { adminSection, adminSections } from "@/lib/admin-path";
+import {
+  adminSection,
+  adminSections,
+  type AdminCounts,
+  type AdminPerson,
+} from "@/lib/admin-path";
 import { getSiteImages } from "@/lib/get-site-images";
-import { siteImageSlots, type SiteImages } from "@/lib/site-images";
 import { isSupabaseConfigured, supabaseSetupMessage } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 import { getViewer } from "@/lib/viewer";
@@ -16,8 +20,53 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-function localImages(): SiteImages {
-  return Object.fromEntries(siteImageSlots.map((slot) => [slot.key, slot.fallback])) as SiteImages;
+const emptyCounts: AdminCounts = {
+  admins: 0,
+  participants: 0,
+  contests: 0,
+  openContests: 0,
+  heroTitle: null,
+};
+
+function joinedLabel(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+}
+
+function peopleFromRows(rows: unknown): AdminPerson[] {
+  if (!Array.isArray(rows)) return [];
+  return rows.flatMap((row) => {
+    if (!row || typeof row !== "object") return [];
+    const record = row as Record<string, unknown>;
+    if (typeof record.id !== "string") return [];
+    return [
+      {
+        id: record.id,
+        name: typeof record.full_name === "string" && record.full_name.trim() ? record.full_name : "Unnamed",
+        email: typeof record.email === "string" ? record.email : "",
+        phone: typeof record.phone === "string" ? record.phone : "",
+        joined: typeof record.created_at === "string" ? joinedLabel(record.created_at) : "—",
+      },
+    ];
+  });
+}
+
+function countsFromRow(row: unknown): AdminCounts {
+  if (!row || typeof row !== "object") return emptyCounts;
+  const record = row as Record<string, unknown>;
+  const number = (key: string) => (typeof record[key] === "number" ? record[key] : 0);
+  return {
+    admins: number("admin_count"),
+    participants: number("participant_count"),
+    contests: number("contest_count"),
+    openContests: number("open_contest_count"),
+    heroTitle: typeof record.hero_title === "string" && record.hero_title ? record.hero_title : null,
+  };
 }
 
 async function AdminGate({ section }: { section: string | undefined }) {
@@ -31,59 +80,51 @@ async function AdminGate({ section }: { section: string | undefined }) {
 
   const viewer = await getViewer("admin");
   if (!viewer.signedIn) redirect("/admin/login");
-  if (!viewer.isAdmin) {
-    notFound();
-  }
+  if (!viewer.isAdmin) notFound();
 
   const current = adminSection(section);
-  const needsImages = current === "home";
-  const needsReels = current === "winners";
-  const needsContests = current === "competitions";
-  const supabase = needsReels || needsContests ? await createClient("admin") : null;
-  const [images, reelResult, contestResult] = await Promise.all([
-    needsImages ? getSiteImages() : Promise.resolve(localImages()),
-    needsReels && supabase
-      ? supabase
-          .from("winner_reels")
-          .select("id, title, video_url, slot")
-          .eq("visible", true)
-          .order("slot", { ascending: true })
-      : Promise.resolve(null),
-    needsContests && supabase
+  const supabase = await createClient("admin");
+  const images = await getSiteImages();
+  const needsContests = current === "contests";
+  const needsPeople = current === "admins" || current === "users";
+  const needsCounts = current === "dashboard";
+  const [contestResult, peopleResult, countsResult] = await Promise.all([
+    needsContests
       ? supabase.from("contests").select(contestColumns).order("sort_order", { ascending: true })
       : Promise.resolve(null),
+    needsPeople
+      ? supabase.rpc("admin_list_profiles", {
+          requested_role: current === "admins" ? "admin" : "participant",
+        })
+      : Promise.resolve(null),
+    needsCounts ? supabase.rpc("admin_account_counts") : Promise.resolve(null),
   ]);
+
+  const countRow = Array.isArray(countsResult?.data) ? countsResult.data[0] : countsResult?.data;
 
   return (
     <AdminDesk
       section={current}
-      images={images}
-      reelsReady={!reelResult?.error}
+      logo={images.logo}
+      viewerName={viewer.name}
       contestsReady={!contestResult?.error}
       contests={
         contestResult?.error
           ? fallbackContests
           : (contestResult?.data ?? []).map((row) => contestFromRow(row as ContestRow))
       }
-      reels={(reelResult?.data ?? []).flatMap((row) => {
-        const slot = Number(row.slot);
-        if (!Number.isInteger(slot) || slot < 1 || typeof row.video_url !== "string") return [];
-        return [
-          {
-            slot,
-            title: typeof row.title === "string" ? row.title : "",
-            videoUrl: row.video_url,
-          },
-        ];
-      })}
+      peopleReady={!peopleResult?.error}
+      people={peopleFromRows(peopleResult?.data)}
+      countsReady={!countsResult?.error}
+      counts={countsResult?.error ? emptyCounts : countsFromRow(countRow)}
     />
   );
 }
 
 function DeskFrame() {
   return (
-    <div className="min-h-dvh bg-surface md:pl-60">
-      <aside className="fixed inset-y-0 left-0 z-40 hidden h-dvh w-60 flex-col bg-primary-container text-on-primary md:flex">
+    <div className="min-h-dvh bg-surface md:pl-64">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden h-dvh w-64 flex-col bg-primary-container text-on-primary md:flex">
         <div className="px-4 py-6">
           <p className="font-label-sm text-label-sm tracking-widest text-tertiary-fixed uppercase">Rising Star</p>
           <p className="font-headline-sm text-headline-sm">Admin</p>

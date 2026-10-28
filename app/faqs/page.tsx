@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "FAQs" };
 const faqs = [
   {
     q: "Who can take part?",
-    a: "Contests are for ages 1–20. Babies and toddlers (1–3), kids and juniors (4–12), and teens and youth (13–20) each have their own brackets.",
+    a: "Young talents and their families can take part. A parent or guardian creates the account for anyone under 18.",
   },
   {
     q: "Is entry free?",

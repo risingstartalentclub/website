@@ -23,8 +23,8 @@ export function ContactSection() {
             Contact Us
           </h2>
           <p className="font-body-md text-body-md mt-2 max-w-md text-on-surface-variant">
-            Our support team helps with submission guidelines, age brackets, and
-            child safety standards.
+            Our support team helps with submission guidelines and child safety
+            standards.
           </p>
         </div>
         <div className="rounded-xl bg-surface-container-lowest p-space-lg shadow-md lg:col-span-7">

@@ -1,24 +1,17 @@
-"use client";
-
-import { useState } from "react";
 import Link from "next/link";
-import { ageFilters, contests, type AgeGroup, type Contest } from "@/lib/content";
+import { contests, type Contest } from "@/lib/content";
 import { Icon } from "@/components/icon";
 
 export function CompetitionsSection({
   items = contests,
-  limit,
+  featured = false,
   signedIn = false,
 }: {
   items?: Contest[];
-  limit?: number;
+  featured?: boolean;
   signedIn?: boolean;
 }) {
-  const [filter, setFilter] = useState<AgeGroup>("all");
-  const visible = items.filter(
-    (contest) => filter === "all" || contest.ageGroup === filter,
-  );
-  const shown = typeof limit === "number" ? visible.slice(0, limit) : visible;
+  const shown = featured ? items.filter((contest) => contest.isHero).slice(0, 1) : items;
 
   return (
     <section className="w-full scroll-mt-20 bg-surface-container-low py-space-xl" id="competitions">
@@ -30,14 +23,15 @@ export function CompetitionsSection({
               WHAT&apos;S HAPPENING NOW
             </div>
             <h2 className="font-headline-xl text-headline-xl-mobile md:text-headline-xl tracking-tight text-primary">
-              Discover Exciting Contests
+              {featured ? "Featured Contest" : "Discover Exciting Contests"}
             </h2>
             <p className="font-body-md text-body-md mt-1 max-w-2xl text-on-surface-variant">
-              From festive celebrations to creative challenges, find your moment
-              to shine with Rising Star Talent Club.
+              {featured
+                ? "The contest chosen for the homepage is the one families can enter from here."
+                : "From festive celebrations to creative challenges, find your moment to shine with Rising Star Talent Club."}
             </p>
           </div>
-          {typeof limit === "number" ? (
+          {featured ? (
             <Link
               href="/competitions"
               className="font-label-lg text-label-lg group inline-flex items-center gap-1.5 self-start font-semibold text-secondary transition-colors hover:text-primary md:self-auto"
@@ -51,34 +45,16 @@ export function CompetitionsSection({
           ) : null}
         </div>
 
-        <div className="no-scrollbar mb-space-lg flex items-center gap-space-sm overflow-x-auto pb-space-sm">
-          {ageFilters.map((item) => {
-            const selectedFilter = filter === item.id;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setFilter(item.id)}
-                className={
-                  selectedFilter
-                    ? "font-label-md text-label-md rounded-full bg-primary px-space-md py-space-xs whitespace-nowrap text-on-primary shadow-sm transition-all"
-                    : "font-label-md text-label-md rounded-full bg-surface-container-lowest px-space-md py-space-xs whitespace-nowrap text-on-surface-variant shadow-sm transition-all hover:text-on-surface"
-                }
-              >
-                {item.label}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="grid grid-cols-1 gap-gutter md:grid-cols-2">
+        <div className={shown.length === 1 ? "mx-auto grid max-w-xl grid-cols-1" : "grid grid-cols-1 gap-gutter md:grid-cols-2"}>
           {shown.length === 0 ? (
             <div className="rounded-xl bg-surface-container-lowest p-space-lg text-center shadow-sm md:col-span-2">
               <h3 className="font-headline-sm text-headline-sm text-primary">
-                No open contests in this age group yet.
+                {featured ? "Featured contest coming soon." : "No open contests yet."}
               </h3>
               <p className="font-body-md text-body-md mt-1 text-on-surface-variant">
-                Autumn & Festive Season 2026 contests for this bracket will appear here.
+                {featured
+                  ? "The homepage shows the one contest marked for this spot."
+                  : "Autumn & Festive Season 2026 contests will appear here."}
               </p>
             </div>
           ) : (
@@ -96,12 +72,14 @@ export function CompetitionsSection({
                     />
                   ) : null}
                   <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
+                    {contest.isHero && !featured ? (
+                      <span className="font-label-sm text-label-sm rounded-full bg-tertiary-fixed px-2.5 py-1 font-bold text-on-tertiary-fixed shadow-sm">
+                        Homepage
+                      </span>
+                    ) : null}
                     <span className="font-label-sm text-label-sm flex items-center gap-1 rounded-full bg-surface-container-lowest/95 px-2.5 py-1 font-bold text-[#0d5c3a] shadow-sm backdrop-blur-sm">
                       <span className="h-2 w-2 animate-pulse rounded-full bg-[#1b8755]" />
                       {contest.status === "closed" ? "Registrations Closed" : "Registrations Open"}
-                    </span>
-                    <span className="font-label-sm text-label-sm rounded-full bg-tertiary-fixed px-2.5 py-1 font-bold text-on-tertiary-fixed shadow-sm">
-                      {contest.ageBadge}
                     </span>
                   </div>
                   <div className="absolute right-3 bottom-3">
@@ -161,7 +139,7 @@ export function CompetitionsSection({
           )}
         </div>
 
-        {typeof limit === "number" ? (
+        {featured ? (
           <div className="mt-space-xl text-center">
             <Link
               href="/competitions"

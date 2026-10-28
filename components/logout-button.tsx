@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useFormStatus } from "react-dom";
 import { signOut } from "@/app/actions/auth";
@@ -50,7 +50,7 @@ export function LogoutButton({
   scope = "public",
 }: {
   className?: string;
-  children: string;
+  children: ReactNode;
   scope?: "public" | "admin";
 }) {
   const [open, setOpen] = useState(false);

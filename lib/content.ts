@@ -8,14 +8,10 @@ export const assets = {
     "https://lh3.googleusercontent.com/aida-public/AB6AXuAiZJ2dCIdaGNEJj5IWQ6gGVTyFRbrDqRyGTMAwsusYD8KBN7e2wUW_oDYZh_AEVz9Vw91vwVUBOOGzVWAYY9ZIDAbhAU8GuHsGAg6tNVjTOzOQLlKm_joe9eZSAUfRNS5JHNZxyrwNkZUewLEpXV2VeTYDM412-OwK_5bXc6bYJJUdoCJxj77X8qyy4vQ4l6s_4CgyVgrCnn3NgBEYD0ZI-TETHjF99zpnjm4hTF8T56q2b-9CX8DVbg",
 } as const;
 
-export type AgeGroup = "all" | "baby" | "kids" | "teens";
-
 export type Contest = {
   slug: string;
   title: string;
-  ageGroup: Exclude<AgeGroup, "all">;
   categoryLabel: string;
-  ageBadge: string;
   endsLabel: string;
   endsUrgent: boolean;
   description: string;
@@ -26,22 +22,14 @@ export type Contest = {
   image: string;
   imageAlt: string;
   status?: "open" | "closed";
+  isHero?: boolean;
 };
-
-export const ageFilters: { id: AgeGroup; label: string }[] = [
-  { id: "all", label: "All Contests" },
-  { id: "baby", label: "Baby & Toddler (1–3)" },
-  { id: "kids", label: "Kids & Juniors (4–12)" },
-  { id: "teens", label: "Teens & Youth (13–20)" },
-];
 
 export const contests: Contest[] = [
   {
     slug: "baby-toddler-festive-look",
     title: "Baby & Toddler Festive Look",
-    ageGroup: "baby",
-    categoryLabel: "Baby & Toddler (Ages 1-3)",
-    ageBadge: "Ages 1–3 Years",
+    categoryLabel: "Festive Look",
     endsLabel: "Ends in 6 Days (Oct 28)",
     endsUrgent: true,
     description:
@@ -52,13 +40,12 @@ export const contests: Contest[] = [
     deadline: "Oct 28, 2025",
     image: "/contests/baby-festive.jpg",
     imageAlt: "Baby & Toddler Festive Look winner",
+    isHero: true,
   },
   {
     slug: "diwali-cultural-showcase-2026",
     title: "Diwali & Cultural Showcase 2026",
-    ageGroup: "kids",
-    categoryLabel: "Kids & Juniors (Ages 4-12)",
-    ageBadge: "Ages 4–12 Years",
+    categoryLabel: "Cultural Showcase",
     endsLabel: "Ends in 12 Days (Nov 4)",
     endsUrgent: false,
     description:
@@ -127,7 +114,7 @@ export const winners: Winner[] = [
 export const clubRegistration = {
   slug: "club-registration",
   title: "New Participant Registration",
-  categoryLabel: "Youth Category (Ages 1-20)",
+  categoryLabel: "Open Registration",
   reward: "Official Star Entry Badge",
   fee: "Free to Join",
   deadline: "Ongoing",

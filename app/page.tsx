@@ -17,7 +17,7 @@ export default function HomePage() {
     <SiteFrame>
       <div className="flex w-full flex-col">
         <HeroSection />
-        <CompetitionsLive limit={2} />
+        <CompetitionsLive featured />
         <HowItWorksSection />
         <WhySection />
         <WinnersSection />

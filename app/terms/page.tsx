@@ -9,9 +9,9 @@ export default function TermsPage() {
     <SiteFrame>
       <InfoPage eyebrow="Legal & Compliance" title="Terms and Conditions">
         <p>
-          Rising Star Talent Club provides family-friendly contests for
-          participants aged 1–20. Using the site means you agree to these terms
-          and the competition rules.
+          Rising Star Talent Club provides family-friendly contests for young
+          participants. Using the site means you agree to these terms and the
+          competition rules.
         </p>
         <p>
           Accounts must use a real name and a working email. A parent or
@@ -24,8 +24,8 @@ export default function TermsPage() {
           charged through this website.
         </p>
         <p>
-          We may refuse or remove an entry that breaks the competition rules,
-          misstates a participant&apos;s age, or is unsafe for a family audience.
+          We may refuse or remove an entry that breaks the competition rules or
+          is unsafe for a family audience.
         </p>
       </InfoPage>
     </SiteFrame>
