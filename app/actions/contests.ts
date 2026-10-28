@@ -12,9 +12,7 @@ export type ContestState = {
 } | null;
 
 const setupMessage =
-  "Run supabase/4-contest-cards.sql once in the Supabase SQL editor, then save the card again.";
-const heroSqlMessage =
-  "Run supabase/6-hero-and-people.sql once in the Supabase SQL editor, then save the card again.";
+  "Run supabase/1-schema.sql once in the Supabase SQL editor, then save the contest again.";
 
 function slugify(title: string) {
   return title
@@ -35,57 +33,55 @@ async function requireAdmin() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { supabase: null, error: "Log in with an admin account." };
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle();
-  if (profile?.role !== "admin") return { supabase: null, error: "Only an admin can change contests." };
+  const { data: adminRow } = await supabase.from("admins").select("id").eq("id", user.id).maybeSingle();
+  if (!adminRow) return { supabase: null, error: "Only an admin can change contests." };
   return { supabase, error: null };
 }
 
+function dateValue(formData: FormData, name: string) {
+  const value = text(formData, name, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : "";
+}
+
 function cardFromForm(formData: FormData) {
-  const title = text(formData, "title", 120);
-  const description = text(formData, "description", 400);
-  const categoryLabel = text(formData, "categoryLabel", 80);
-  const endsLabel = text(formData, "endsLabel", 80);
-  const deadline = text(formData, "deadline", 40);
+  const name = text(formData, "name", 120);
+  const description = text(formData, "description", 800);
   const reward = text(formData, "reward", 120);
-  const fee = text(formData, "fee", 40);
-  const imageAlt = text(formData, "imageAlt", 160);
-  const status = text(formData, "status", 20) === "closed" ? "closed" : "open";
-  const endsUrgent = formData.get("endsUrgent") === "on";
+  const ageRange = text(formData, "ageRange", 40);
+  const entryFee = Number(text(formData, "entryFee", 12));
+  const startDate = dateValue(formData, "startDate");
+  const endDate = dateValue(formData, "endDate");
+  const resultDate = dateValue(formData, "resultDate");
+  const registrationStatus = text(formData, "registrationStatus", 20) === "closed" ? "closed" : "open";
   const isHero = formData.get("isHero") === "on";
 
-  if (title.length < 2) return { error: "Enter the contest title." };
+  if (name.length < 2) return { error: "Enter the contest name." };
   if (description.length < 10) return { error: "Enter a short description." };
-  if (categoryLabel.length < 2 || endsLabel.length < 2 || deadline.length < 2) {
-    return { error: "Fill in the category, end label, and deadline." };
+  if (ageRange.length < 1) return { error: "Enter the age range." };
+  if (reward.length < 2) return { error: "Enter the reward." };
+  if (!Number.isFinite(entryFee) || entryFee < 0) return { error: "Enter an entry fee of 0 or more. Use 0 for free entry." };
+  if (!startDate || !endDate || !resultDate) return { error: "Enter the start, end, and result dates." };
+  if (startDate > endDate || endDate > resultDate) {
+    return { error: "The start date must be on or before the end date, and the result date must be on or after the end date." };
   }
-  if (reward.length < 2 || fee.length < 2) return { error: "Enter the reward and the entry fee." };
 
   return {
     row: {
-      title,
+      name,
       description,
-      category_label: categoryLabel,
-      ends_label: endsLabel,
-      ends_urgent: endsUrgent,
-      deadline,
       reward,
-      fee,
-      image_alt: imageAlt || title,
-      status,
+      age_range: ageRange,
+      entry_fee: entryFee,
+      start_date: startDate,
+      end_date: endDate,
+      result_date: resultDate,
+      registration_status: registrationStatus,
       is_hero: isHero,
     },
   };
 }
 
 function failed(error: { code?: string; message?: string }) {
-  if (error.code === "23502" && error.message?.includes("age_")) {
-    return "Run supabase/5-remove-age-groups.sql once in the Supabase SQL editor, then save the card again.";
-  }
-  if (error.code === "42703" && error.message?.includes("is_hero")) return heroSqlMessage;
   if (error.code === "42P01" || error.code === "42703" || error.message?.includes("contests")) {
     return setupMessage;
   }
@@ -108,7 +104,7 @@ export async function saveContest(_previous: ContestState, formData: FormData): 
   if (!isSafeImageUrl(image)) return { error: "Choose an image." };
 
   const existing = text(formData, "slug", 80);
-  const slug = existing || slugify(parsed.row.title);
+  const slug = existing || slugify(parsed.row.name);
   if (slug.length < 2) return { error: "Enter a contest title." };
 
   let sortOrder = 1;
@@ -130,12 +126,10 @@ export async function saveContest(_previous: ContestState, formData: FormData): 
     if (clearError) return { error: failed(clearError) };
   }
 
-  const row = { ...parsed.row, image_url: image };
+  const row = { ...parsed.row, banner_url: image };
   const { error } = existing
     ? await admin.supabase.from("contests").update(row).eq("slug", slug)
-    : await admin.supabase
-        .from("contests")
-        .insert({ ...row, slug, sort_order: sortOrder, reward_icon: "emoji_events" });
+    : await admin.supabase.from("contests").insert({ ...row, slug, sort_order: sortOrder });
 
   if (error) {
     if (error.code === "23505" && error.message?.includes("one_hero")) {

@@ -1,5 +1,6 @@
 "use server";
 
+import { limitContact } from "@/lib/public-limits";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured, supabaseSetupMessage } from "@/lib/supabase/env";
 import { emailError, normalizeEmail } from "@/lib/validation";
@@ -33,6 +34,9 @@ export async function sendMessage(
   if (!isSupabaseConfigured()) {
     return { ok: false, message: supabaseSetupMessage };
   }
+
+  const limited = await limitContact(email);
+  if (!limited.allowed) return { ok: false, message: limited.message };
 
   const supabase = await createClient();
   const { error } = await supabase.from("contact_messages").insert({

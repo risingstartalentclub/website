@@ -23,6 +23,11 @@ export type Contest = {
   imageAlt: string;
   status?: "open" | "closed";
   isHero?: boolean;
+  ageRange?: string;
+  entryFee?: string;
+  startDate?: string;
+  endDate?: string;
+  resultDate?: string;
 };
 
 export const contests: Contest[] = [

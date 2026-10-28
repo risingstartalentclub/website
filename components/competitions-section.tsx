@@ -3,7 +3,7 @@ import { contests, type Contest } from "@/lib/content";
 import { Icon } from "@/components/icon";
 
 export function CompetitionsSection({
-  items = contests,
+  items,
   featured = false,
   signedIn = false,
 }: {
@@ -11,7 +11,8 @@ export function CompetitionsSection({
   featured?: boolean;
   signedIn?: boolean;
 }) {
-  const shown = featured ? items.filter((contest) => contest.isHero).slice(0, 1) : items;
+  const source = items ?? (featured ? [] : contests);
+  const shown = featured ? source.filter((contest) => contest.isHero).slice(0, 1) : source;
 
   return (
     <section className="w-full scroll-mt-20 bg-surface-container-low py-space-xl" id="competitions">
@@ -45,18 +46,38 @@ export function CompetitionsSection({
           ) : null}
         </div>
 
-        <div className={shown.length === 1 ? "mx-auto grid max-w-xl grid-cols-1" : "grid grid-cols-1 gap-gutter md:grid-cols-2"}>
+        <div
+          className={
+            featured || shown.length === 1
+              ? "mx-auto grid max-w-xl grid-cols-1"
+              : "grid grid-cols-1 gap-gutter md:grid-cols-2"
+          }
+        >
           {shown.length === 0 ? (
-            <div className="rounded-xl bg-surface-container-lowest p-space-lg text-center shadow-sm md:col-span-2">
-              <h3 className="font-headline-sm text-headline-sm text-primary">
-                {featured ? "Featured contest coming soon." : "No open contests yet."}
-              </h3>
-              <p className="font-body-md text-body-md mt-1 text-on-surface-variant">
-                {featured
-                  ? "The homepage shows the one contest marked for this spot."
-                  : "Autumn & Festive Season 2026 contests will appear here."}
-              </p>
-            </div>
+            featured ? (
+              <article className="overflow-hidden rounded-xl border border-dashed border-outline-variant/80 bg-surface-container-lowest shadow-sm">
+                <div className="flex aspect-[16/10] items-center justify-center bg-surface-container">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-tertiary-fixed text-on-tertiary-fixed">
+                    <Icon name="emoji_events" className="text-[32px]" />
+                  </div>
+                </div>
+                <div className="p-space-lg text-center">
+                  <h3 className="font-headline-md text-headline-md tracking-tight text-primary">
+                    Featured contest coming soon
+                  </h3>
+                  <p className="font-body-md text-body-md mt-1.5 text-on-surface-variant">
+                    When a contest is chosen for the homepage, it will appear in this spot.
+                  </p>
+                </div>
+              </article>
+            ) : (
+              <div className="rounded-xl bg-surface-container-lowest p-space-lg text-center shadow-sm md:col-span-2">
+                <h3 className="font-headline-sm text-headline-sm text-primary">No open contests yet.</h3>
+                <p className="font-body-md text-body-md mt-1 text-on-surface-variant">
+                  Autumn & Festive Season 2026 contests will appear here.
+                </p>
+              </div>
+            )
           ) : (
             shown.map((contest) => (
               <article
@@ -99,6 +120,9 @@ export function CompetitionsSection({
                       />
                       <span>{contest.endsLabel}</span>
                     </div>
+                    {contest.categoryLabel ? (
+                      <p className="font-label-sm text-label-sm mt-1 text-secondary">{contest.categoryLabel}</p>
+                    ) : null}
                     <h3 className="font-headline-md text-headline-md tracking-tight text-primary">
                       {contest.title}
                     </h3>

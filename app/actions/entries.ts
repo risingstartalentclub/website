@@ -1,6 +1,7 @@
 "use server";
 
 import { clubRegistration, contests } from "@/lib/content";
+import { limitEntry } from "@/lib/public-limits";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured, supabaseSetupMessage } from "@/lib/supabase/env";
 import { emailError, normalizeEmail } from "@/lib/validation";
@@ -34,15 +35,18 @@ export async function submitEntry(
     return { ok: false, message: supabaseSetupMessage };
   }
 
+  const limited = await limitEntry(email);
+  if (!limited.allowed) return { ok: false, message: limited.message };
+
   const supabase = await createClient();
   if (!contestTitle) {
     const { data: contest } = await supabase
       .from("contests")
-      .select("title, status")
+      .select("name, registration_status")
       .eq("slug", contestSlug)
       .maybeSingle();
-    if (contest && contest.status !== "closed" && typeof contest.title === "string") {
-      contestTitle = contest.title;
+    if (contest && contest.registration_status !== "closed" && typeof contest.name === "string") {
+      contestTitle = contest.name;
     }
   }
   if (!contestTitle) {

@@ -50,6 +50,8 @@ function peopleFromRows(rows: unknown): AdminPerson[] {
         name: typeof record.full_name === "string" && record.full_name.trim() ? record.full_name : "Unnamed",
         email: typeof record.email === "string" ? record.email : "",
         phone: typeof record.phone === "string" ? record.phone : "",
+        city: typeof record.city === "string" ? record.city : "",
+        state: typeof record.state === "string" ? record.state : "",
         joined: typeof record.created_at === "string" ? joinedLabel(record.created_at) : "—",
       },
     ];
@@ -94,7 +96,7 @@ async function AdminGate({ section }: { section: string | undefined }) {
       : Promise.resolve(null),
     needsPeople
       ? supabase.rpc("admin_list_profiles", {
-          requested_role: current === "admins" ? "admin" : "participant",
+          requested_role: current === "admins" ? "admin" : "parent",
         })
       : Promise.resolve(null),
     needsCounts ? supabase.rpc("admin_account_counts") : Promise.resolve(null),

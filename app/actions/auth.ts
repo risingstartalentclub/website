@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { adminPath, isAdminDestination } from "@/lib/admin-path";
 import { safeNextPath } from "@/lib/safe-next";
 import { isSupabaseConfigured, supabaseSetupMessage } from "@/lib/supabase/env";
+import { limitLogin, limitSignup } from "@/lib/public-limits";
 import { emailError, mobileError, normalizeEmail, normalizeMobile, passwordError } from "@/lib/validation";
 
 export type AuthState = {
@@ -34,14 +35,17 @@ export async function signUp(
     return { error: supabaseSetupMessage };
   }
 
+  const limited = await limitSignup(email, normalizeMobile(mobile));
+  if (!limited.allowed) return { error: limited.message };
+
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: {
+        account_type: "parent",
         full_name: guardianName,
-        guardian_name: guardianName,
         phone: `+91${normalizeMobile(mobile)}`,
       },
     },
@@ -73,6 +77,9 @@ async function authenticate(formData: FormData, scope: "public" | "admin" = "pub
     return { error: supabaseSetupMessage };
   }
 
+  const limited = await limitLogin(email, scope);
+  if (!limited.allowed) return { error: limited.message };
+
   const supabase = await createClient(scope);
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error || !data.user) {
@@ -82,15 +89,13 @@ async function authenticate(formData: FormData, scope: "public" | "admin" = "pub
     return { error: "We could not log you in. Please try again in a moment." };
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", data.user.id)
-    .maybeSingle();
+  const table = scope === "admin" ? "admins" : "parents";
+  const { data: account } = await supabase.from(table).select("id").eq("id", data.user.id).maybeSingle();
 
   return {
     supabase,
-    isAdmin: profile?.role === "admin",
+    isAdmin: scope === "admin" && Boolean(account),
+    isParent: scope === "public" && Boolean(account),
     nextPath: safeNextPath(String(formData.get("next") ?? "")),
   };
 }
@@ -102,9 +107,9 @@ export async function signIn(
   const result = await authenticate(formData);
   if ("error" in result) return { error: result.error };
 
-  if (result.isAdmin) {
+  if (!result.isParent) {
     await result.supabase.auth.signOut();
-    return { error: "Those login details did not match an account." };
+    return { error: "Those login details did not match a parent account." };
   }
   if (result.nextPath && isAdminDestination(result.nextPath)) {
     await result.supabase.auth.signOut();

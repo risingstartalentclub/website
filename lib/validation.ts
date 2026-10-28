@@ -39,6 +39,27 @@ export function mobileError(value: string) {
   return null;
 }
 
+export function pincodeError(value: string) {
+  const pin = value.trim();
+  if (!/^[1-9][0-9]{5}$/.test(pin)) return "Enter a 6-digit PIN code.";
+  return null;
+}
+
+export function instagramError(value: string) {
+  const raw = value.trim();
+  if (!raw) return null;
+  try {
+    const url = new URL(raw);
+    const host = url.hostname.replace(/^www\./, "");
+    if (url.protocol !== "https:" || host !== "instagram.com") {
+      return "Enter an Instagram profile link, like https://instagram.com/name.";
+    }
+    return null;
+  } catch {
+    return "Enter an Instagram profile link, like https://instagram.com/name.";
+  }
+}
+
 export function passwordError(value: string, mode: "login" | "signup") {
   if (!value) return "Enter a password.";
   if (value.length > 72) return "Use a password of 72 characters or fewer.";

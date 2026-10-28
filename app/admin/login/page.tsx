@@ -21,8 +21,8 @@ async function SignedInAdminRedirect() {
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
-  if (profile?.role === "admin") redirect(adminPath);
+  const { data: admin } = await supabase.from("admins").select("id").eq("id", user.id).maybeSingle();
+  if (admin) redirect(adminPath);
   return null;
 }
 
@@ -73,8 +73,8 @@ export default async function AdminLoginPage() {
           </p>
           <ul className="mt-6 hidden gap-2 lg:grid">
             {[
-              ["Dashboard", "See contests, admins, and web users at a glance."],
-              ["Contests", "Publish cards and choose the homepage contest."],
+              ["Dashboard", "See contests, admins, and parents at a glance."],
+              ["Contests", "Publish contests and choose the homepage contest."],
               ["People", "Review staff accounts and registered families."],
             ].map(([title, body]) => (
               <li key={title} className="rounded-xl border border-on-primary/10 bg-on-primary/5 px-4 py-3">

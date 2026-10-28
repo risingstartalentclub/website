@@ -74,12 +74,8 @@ export async function uploadAdminImage(
     return { error: "Log in with an admin account to change images." };
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle();
-  if (profile?.role !== "admin") {
+  const { data: admin } = await supabase.from("admins").select("id").eq("id", user.id).maybeSingle();
+  if (!admin) {
     return { error: "Only an admin can change images." };
   }
 
@@ -129,12 +125,8 @@ export async function updateSiteImage(
     return { key, error: "Log in with an admin account to change images." };
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle();
-  if (profile?.role !== "admin") {
+  const { data: admin } = await supabase.from("admins").select("id").eq("id", user.id).maybeSingle();
+  if (!admin) {
     return { key, error: "Only an admin can change images." };
   }
 

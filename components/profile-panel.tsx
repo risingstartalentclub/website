@@ -1,7 +1,5 @@
 import Link from "next/link";
 import { connection } from "next/server";
-import { redirect } from "next/navigation";
-import { adminPath } from "@/lib/admin-path";
 import { LogoutButton } from "@/components/logout-button";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
@@ -45,8 +43,8 @@ export async function ProfilePanel() {
 
   const [profileResult, entriesResult] = await Promise.all([
     supabase
-      .from("profiles")
-      .select("full_name, guardian_name, role")
+      .from("parents")
+      .select("full_name, email, mobile, address, city, pincode, state, instagram_url")
       .eq("id", user.id)
       .maybeSingle(),
     supabase
@@ -66,10 +64,19 @@ export async function ProfilePanel() {
   }
 
   const profile = profileResult.data;
-  if (profile?.role === "admin") redirect(adminPath);
+  if (!profile) {
+    return (
+      <Notice
+        title="This page is for parent accounts"
+        body="Log in with the parent account you use to enter contests."
+        actionHref="/login"
+        actionLabel="Log In"
+      />
+    );
+  }
   const entries = entriesResult.data ?? [];
 
-  const name = profile?.full_name || user.email || "Participant";
+  const name = profile.full_name || user.email || "Parent";
 
   return (
     <section className="w-full bg-surface-container-low py-space-xl">
@@ -83,14 +90,19 @@ export async function ProfilePanel() {
               {name}
             </h1>
             <p className="font-body-md text-body-md text-surface-container-highest">
-              {user.email}
-              {profile?.guardian_name && profile.guardian_name !== name
-                ? ` · Guardian: ${profile.guardian_name}`
-                : ""}
-              {typeof user.user_metadata?.phone === "string" && user.user_metadata.phone
-                ? ` · ${user.user_metadata.phone}`
-                : ""}
+              {profile.email || user.email}
+              {profile.mobile ? ` · ${profile.mobile}` : ""}
             </p>
+            {[profile.address, profile.city, profile.state, profile.pincode].some(Boolean) ? (
+              <p className="font-body-sm text-body-sm mt-1 text-surface-container-highest">
+                {[profile.address, profile.city, profile.state, profile.pincode].filter(Boolean).join(", ")}
+              </p>
+            ) : null}
+            {profile.instagram_url ? (
+              <a href={profile.instagram_url} className="font-label-md text-label-md mt-2 inline-block text-tertiary-fixed" target="_blank" rel="noopener noreferrer">
+                Instagram profile
+              </a>
+            ) : null}
           </div>
           <LogoutButton className="font-label-lg text-label-lg rounded-lg bg-surface-container-lowest px-space-lg py-3 text-primary transition-colors hover:bg-surface-container">
             Log Out

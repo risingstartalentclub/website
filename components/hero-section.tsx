@@ -14,7 +14,7 @@ export function HeroSection() {
 }
 
 async function HeroLive() {
-  const [images, items] = await Promise.all([getSiteImages(), getContests()]);
+  const [images, items] = await Promise.all([getSiteImages(), getContests(false)]);
   const hero = applyContestImages(items, images).find((item) => item.isHero) ?? null;
   return <HeroView contest={hero} />;
 }
@@ -148,28 +148,30 @@ function HeroView({ contest }: { contest: Contest | null }) {
                   </div>
                 </div>
               </a>
-              <div className="pointer-events-none absolute -top-5 -left-6 flex items-center gap-space-sm rounded-lg bg-primary-container p-space-sm text-on-primary shadow-lg">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-tertiary-fixed text-on-tertiary-fixed">
-                  <Icon name="workspace_premium" className="text-[18px]" />
+              {contest ? (
+                <div className="pointer-events-none absolute -top-5 -left-6 flex items-center gap-space-sm rounded-lg bg-primary-container p-space-sm text-on-primary shadow-lg">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-tertiary-fixed text-on-tertiary-fixed">
+                    <Icon name="workspace_premium" className="text-[18px]" />
+                  </div>
+                  <div>
+                    <p className="font-label-sm text-label-sm text-tertiary-fixed uppercase">Featured</p>
+                    <p className="font-label-md text-label-md font-bold">
+                      {contest.status === "closed" ? "Registrations closed" : "Registrations open"}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-label-sm text-label-sm text-tertiary-fixed uppercase">Featured</p>
-                  <p className="font-label-md text-label-md font-bold">
-                    {contest?.status === "closed" ? "Registrations closed" : "Registrations open"}
-                  </p>
+              ) : null}
+              {contest ? (
+                <div className="pointer-events-none absolute -right-4 -bottom-6 hidden max-w-[220px] items-center gap-space-sm rounded-lg bg-surface-container-lowest p-space-sm shadow-xl sm:flex">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-tertiary-fixed text-on-tertiary-fixed">
+                    <Icon name={contest.rewardIcon || "emoji_events"} filled className="text-[22px]" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="font-label-sm text-label-sm font-bold text-secondary">Reward</span>
+                    <p className="font-label-md text-label-md truncate font-bold text-primary">{contest.fee}</p>
+                  </div>
                 </div>
-              </div>
-              <div className="pointer-events-none absolute -right-4 -bottom-6 hidden max-w-[220px] items-center gap-space-sm rounded-lg bg-surface-container-lowest p-space-sm shadow-xl sm:flex">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-tertiary-fixed text-on-tertiary-fixed">
-                  <Icon name={contest?.rewardIcon || "emoji_events"} filled className="text-[22px]" />
-                </div>
-                <div className="min-w-0">
-                  <span className="font-label-sm text-label-sm font-bold text-secondary">Reward</span>
-                  <p className="font-label-md text-label-md truncate font-bold text-primary">
-                    {contest?.fee ?? "Free Entry"}
-                  </p>
-                </div>
-              </div>
+              ) : null}
             </div>
           </div>
         </div>

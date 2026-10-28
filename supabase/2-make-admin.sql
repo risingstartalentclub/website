@@ -1,7 +1,8 @@
 -- Creates an admin you can log in with immediately.
+-- Run supabase/1-schema.sql first.
 -- 1. Change the email and password below.
 -- 2. Run this once in the Supabase SQL editor.
--- 3. On the site, log in with that same email and password.
+-- 3. On the site, log in at /admin/login with that same email and password.
 
 create extension if not exists pgcrypto with schema extensions;
 
@@ -47,7 +48,7 @@ begin
       '',
       '',
       '{"provider":"email","providers":["email"]}'::jsonb,
-      '{"full_name":"Club Admin"}'::jsonb,
+      '{"account_type":"admin"}'::jsonb,
       now(),
       now()
     );
@@ -56,9 +57,14 @@ begin
     set
       encrypted_password = extensions.crypt(admin_password, extensions.gen_salt('bf')),
       email_confirmed_at = coalesce(email_confirmed_at, now()),
+      raw_user_meta_data = coalesce(raw_user_meta_data, '{}'::jsonb) || '{"account_type":"admin"}'::jsonb,
       updated_at = now()
     where id = admin_id;
   end if;
+
+  insert into public.admins (id, email)
+  values (admin_id, admin_email)
+  on conflict (id) do update set email = excluded.email;
 
   insert into auth.identities (
     id,

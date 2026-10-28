@@ -17,7 +17,7 @@ const cards = [
   },
   {
     key: "participants" as const,
-    label: "Web users",
+    label: "Parents",
     icon: "how_to_reg",
     href: `${adminPath}?section=users`,
   },
@@ -81,7 +81,7 @@ export function AdminDashboard({
         <p className="font-body-sm text-body-sm mt-1 text-on-surface-variant">
           {counts.heroTitle
             ? "This is the contest visitors see on the homepage."
-            : "Open Contests and tick “Show this contest on the homepage” on one card."}
+            : "Open Contests and tick “Show this contest on the homepage” on one contest."}
         </p>
         <Link
           href={`${adminPath}?section=contests`}

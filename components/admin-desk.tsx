@@ -23,15 +23,15 @@ const sectionCopy: Record<AdminSectionId, { title: string; body: string }> = {
   },
   contests: {
     title: "Contests",
-    body: "Edit a contest card or add a new one. Tick one contest to feature it on the homepage.",
+    body: "Review contests in the table. Add a new contest from the button, or edit one from its row.",
   },
   admins: {
     title: "Admin List",
-    body: "Staff accounts that can sign in to this desk.",
+    body: "Staff accounts that can sign in to this desk. Add another admin from this page.",
   },
   users: {
-    title: "Web user List",
-    body: "Families who created an account on the website.",
+    title: "Parent List",
+    body: "Parents who created an account on the website.",
   },
 };
 
@@ -214,10 +214,10 @@ export function AdminDesk({
           ) : null}
           {section === "contests" ? <AdminContests contests={contests} ready={contestsReady} /> : null}
           {section === "admins" ? (
-            <AdminPeople people={people} ready={peopleReady} emptyLabel="No admin accounts yet." />
+            <AdminPeople people={people} ready={peopleReady} emptyLabel="No admin accounts yet." kind="admin" />
           ) : null}
           {section === "users" ? (
-            <AdminPeople people={people} ready={peopleReady} emptyLabel="No web users yet." />
+            <AdminPeople people={people} ready={peopleReady} emptyLabel="No parents yet." />
           ) : null}
         </div>
       </div>

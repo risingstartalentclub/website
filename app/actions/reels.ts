@@ -11,7 +11,7 @@ export type ReelState = {
 } | null;
 
 const reelSetup =
-  "Run supabase/3-winner-reels.sql once in the Supabase SQL editor, then save the card again.";
+  "Run supabase/1-schema.sql once in the Supabase SQL editor, then save the card again.";
 
 async function requireAdmin() {
   if (!isSupabaseConfigured()) return { supabase: null, error: supabaseSetupMessage };
@@ -21,12 +21,8 @@ async function requireAdmin() {
   } = await supabase.auth.getUser();
   if (!user) return { supabase: null, error: "Log in with an admin account." };
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle();
-  if (profile?.role !== "admin") return { supabase: null, error: "Only an admin can change reels." };
+  const { data: admin } = await supabase.from("admins").select("id").eq("id", user.id).maybeSingle();
+  if (!admin) return { supabase: null, error: "Only an admin can change reels." };
   return { supabase, error: null };
 }
 
@@ -87,7 +83,7 @@ export async function deleteWinnerReel(
     .select("id");
   if (error || !data?.length) {
     return {
-      error: "Run supabase/3-winner-reels.sql once in the Supabase SQL editor, then delete the card again.",
+      error: "Run supabase/1-schema.sql once in the Supabase SQL editor, then delete the card again.",
     };
   }
 

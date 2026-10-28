@@ -7,7 +7,7 @@ import { applyContestImages } from "@/lib/site-images";
 import { getViewer } from "@/lib/viewer";
 
 export function CompetitionsLive({ featured = false }: { featured?: boolean }) {
-  const preview = featured ? contests.filter((contest) => contest.isHero) : contests;
+  const preview = featured ? [] : contests;
   return (
     <Suspense
       fallback={
@@ -25,7 +25,7 @@ export function CompetitionsLive({ featured = false }: { featured?: boolean }) {
 async function LiveCompetitions({ featured }: { featured: boolean }) {
   const [images, items, viewer] = await Promise.all([
     getSiteImages(),
-    getContests(),
+    getContests(!featured),
     getViewer("public"),
   ]);
   const ready = applyContestImages(items, images);

@@ -4,13 +4,13 @@ export function isAdminDestination(path: string) {
   return path === adminPath || path.startsWith(`${adminPath}?`) || path.startsWith(`${adminPath}/`);
 }
 
-export const adminPeopleSql = "supabase/6-hero-and-people.sql";
+export const adminPeopleSql = "supabase/1-schema.sql";
 
 export const adminSections = [
   { id: "dashboard", label: "Dashboard" },
   { id: "contests", label: "Contests" },
   { id: "admins", label: "Admin List" },
-  { id: "users", label: "Web user List" },
+  { id: "users", label: "Parent List" },
 ] as const;
 
 export type AdminSectionId = (typeof adminSections)[number]["id"];
@@ -40,5 +40,7 @@ export type AdminPerson = {
   name: string;
   email: string;
   phone: string;
+  city: string;
+  state: string;
   joined: string;
 };
