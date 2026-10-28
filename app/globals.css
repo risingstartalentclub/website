@@ -1,26 +1,177 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Material Symbols Outlined";
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url("/fonts/material-symbols.woff2") format("woff2");
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --font-plus-jakarta: "Plus Jakarta Sans", sans-serif;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-on-secondary-container: #2f5482;
+  --color-error: #ba1a1a;
+  --color-on-surface: #161c26;
+  --color-tertiary: #201400;
+  --color-surface-container: #e8eefd;
+  --color-on-tertiary-fixed-variant: #5d4200;
+  --color-on-secondary: #ffffff;
+  --color-on-primary-fixed: #021c3a;
+  --color-primary: #001632;
+  --color-inverse-primary: #b2c7ee;
+  --color-outline: #74777e;
+  --color-surface-variant: #dde2f1;
+  --color-tertiary-container: #3a2800;
+  --color-on-error: #ffffff;
+  --color-on-background: #161c26;
+  --color-surface-bright: #f9f9ff;
+  --color-on-secondary-fixed: #001c3a;
+  --color-on-surface-variant: #44474e;
+  --color-inverse-surface: #2b313c;
+  --color-background: #f9f9ff;
+  --color-surface-container-low: #f0f3ff;
+  --color-surface: #f9f9ff;
+  --color-surface-container-highest: #dde2f1;
+  --color-tertiary-fixed-dim: #e8c176;
+  --color-surface-dim: #d4dae9;
+  --color-on-tertiary: #ffffff;
+  --color-on-error-container: #93000a;
+  --color-on-primary-fixed-variant: #324768;
+  --color-secondary: #3c608f;
+  --color-surface-container-high: #e3e8f7;
+  --color-on-tertiary-container: #b08d47;
+  --color-error-container: #ffdad6;
+  --color-secondary-fixed: #d4e3ff;
+  --color-inverse-on-surface: #ecf1ff;
+  --color-secondary-container: #a5c8fe;
+  --color-surface-tint: #4a5f81;
+  --color-on-secondary-fixed-variant: #214876;
+  --color-outline-variant: #c4c6ce;
+  --color-on-primary-container: #7d93b7;
+  --color-on-primary: #ffffff;
+  --color-secondary-fixed-dim: #a5c8fe;
+  --color-surface-container-lowest: #ffffff;
+  --color-tertiary-fixed: #ffdea4;
+  --color-primary-container: #142b4a;
+  --color-on-tertiary-fixed: #261900;
+  --color-primary-fixed: #d5e3ff;
+  --color-primary-fixed-dim: #b2c7ee;
+
+  --font-label-lg: var(--font-plus-jakarta), "Plus Jakarta Sans", sans-serif;
+  --font-display-lg: var(--font-plus-jakarta), "Plus Jakarta Sans", sans-serif;
+  --font-headline-lg: var(--font-plus-jakarta), "Plus Jakarta Sans", sans-serif;
+  --font-body-sm: var(--font-plus-jakarta), "Plus Jakarta Sans", sans-serif;
+  --font-label-sm: var(--font-plus-jakarta), "Plus Jakarta Sans", sans-serif;
+  --font-headline-sm: var(--font-plus-jakarta), "Plus Jakarta Sans", sans-serif;
+  --font-headline-md: var(--font-plus-jakarta), "Plus Jakarta Sans", sans-serif;
+  --font-body-md: var(--font-plus-jakarta), "Plus Jakarta Sans", sans-serif;
+  --font-headline-xl: var(--font-plus-jakarta), "Plus Jakarta Sans", sans-serif;
+  --font-body-lg: var(--font-plus-jakarta), "Plus Jakarta Sans", sans-serif;
+
+  --text-label-lg: 14px;
+  --text-label-lg--line-height: 20px;
+  --text-label-lg--letter-spacing: 0.01em;
+  --text-label-lg--font-weight: 600;
+  --text-display-lg: 56px;
+  --text-display-lg--line-height: 64px;
+  --text-display-lg--letter-spacing: -0.03em;
+  --text-display-lg--font-weight: 800;
+  --text-headline-lg: 32px;
+  --text-headline-lg--line-height: 40px;
+  --text-headline-lg--letter-spacing: -0.02em;
+  --text-headline-lg--font-weight: 700;
+  --text-body-sm: 13px;
+  --text-body-sm--line-height: 20px;
+  --text-body-sm--letter-spacing: 0em;
+  --text-body-sm--font-weight: 400;
+  --text-label-sm: 11px;
+  --text-label-sm--line-height: 14px;
+  --text-label-sm--letter-spacing: 0.05em;
+  --text-label-sm--font-weight: 700;
+  --text-headline-sm: 20px;
+  --text-headline-sm--line-height: 28px;
+  --text-headline-sm--letter-spacing: -0.01em;
+  --text-headline-sm--font-weight: 600;
+  --text-headline-md: 24px;
+  --text-headline-md--line-height: 32px;
+  --text-headline-md--letter-spacing: -0.015em;
+  --text-headline-md--font-weight: 600;
+  --text-body-md: 15px;
+  --text-body-md--line-height: 24px;
+  --text-body-md--letter-spacing: 0em;
+  --text-body-md--font-weight: 400;
+  --text-headline-xl: 40px;
+  --text-headline-xl--line-height: 48px;
+  --text-headline-xl--letter-spacing: -0.025em;
+  --text-headline-xl--font-weight: 700;
+  --text-headline-xl-mobile: 28px;
+  --text-headline-xl-mobile--line-height: 36px;
+  --text-headline-xl-mobile--letter-spacing: -0.02em;
+  --text-headline-xl-mobile--font-weight: 700;
+  --text-label-md: 12px;
+  --text-label-md--line-height: 16px;
+  --text-label-md--letter-spacing: 0.02em;
+  --text-label-md--font-weight: 600;
+  --text-display-lg-mobile: 36px;
+  --text-display-lg-mobile--line-height: 44px;
+  --text-display-lg-mobile--letter-spacing: -0.02em;
+  --text-display-lg-mobile--font-weight: 800;
+  --text-body-lg: 18px;
+  --text-body-lg--line-height: 28px;
+  --text-body-lg--letter-spacing: -0.005em;
+  --text-body-lg--font-weight: 400;
+
+  --spacing-space-xs: 0.25rem;
+  --spacing-gutter-mobile: 1rem;
+  --spacing-margin: 3rem;
+  --spacing-space-sm: 0.5rem;
+  --spacing-space-lg: 1.5rem;
+  --spacing-space-md: 1rem;
+  --spacing-gutter: 1.5rem;
+  --spacing-space-xl: 2.5rem;
+  --spacing-margin-mobile: 1.25rem;
+
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  background: #f9f9ff;
+  color: #161c26;
+  font-family: var(--font-plus-jakarta), "Plus Jakarta Sans", sans-serif;
+}
+
+.material-symbols-outlined {
+  font-family: "Material Symbols Outlined" !important;
+  font-weight: 400 !important;
+  font-style: normal !important;
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  font-variant-ligatures: normal !important;
+  font-feature-settings: "liga" !important;
+  -webkit-font-feature-settings: "liga" !important;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  flex-shrink: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
 }
