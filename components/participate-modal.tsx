@@ -13,6 +13,7 @@ export type ModalContest = {
   reward: string;
   fee: string;
   deadline: string;
+  participationMessage?: string;
 };
 
 export type SavedChild = {
@@ -70,11 +71,16 @@ function EntryRound({
   }
 
   if (state?.ok) {
+    const instruction = state.instruction || contest.participationMessage || "";
     return (
       <div className="flex flex-col gap-space-sm">
-        <p className="font-body-md text-body-md rounded-lg bg-surface-container-low p-space-md text-primary">
-          {state.message}
-        </p>
+        <div className="rounded-lg bg-surface-container-low p-space-md">
+          <p className="font-headline-sm text-headline-sm text-primary">Thank you</p>
+          <p className="font-body-md text-body-md mt-2 text-primary">{state.message}</p>
+          {instruction ? (
+            <p className="font-body-md text-body-md mt-3 whitespace-pre-wrap text-on-surface">{instruction}</p>
+          ) : null}
+        </div>
         <button
           type="button"
           className="font-label-lg text-label-lg w-full rounded-lg bg-surface-container px-space-sm py-3 font-bold text-primary"

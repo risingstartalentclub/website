@@ -1,16 +1,30 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState, type FormEvent } from "react";
 import { sendMessage, type ContactState } from "@/app/actions/contact";
+import { contactMessageError, contactNameError, emailError } from "@/lib/validation";
 
 const fieldClass =
   "font-body-md text-body-md w-full rounded-lg bg-surface px-3 py-2 text-on-surface shadow-sm outline-none focus:bg-surface-container-lowest";
 
 export function ContactSection() {
-  const [state, formAction, pending] = useActionState<ContactState, FormData>(
-    sendMessage,
-    null,
-  );
+  const [state, formAction, pending] = useActionState<ContactState, FormData>(sendMessage, null);
+  const [fieldErrors, setFieldErrors] = useState<{
+    name?: string;
+    email?: string;
+    message?: string;
+  }>({});
+
+  function onSubmit(event: FormEvent<HTMLFormElement>) {
+    const data = new FormData(event.currentTarget);
+    const next = {
+      name: contactNameError(String(data.get("name") ?? "")) ?? undefined,
+      email: emailError(String(data.get("email") ?? "")) ?? undefined,
+      message: contactMessageError(String(data.get("message") ?? "")) ?? undefined,
+    };
+    setFieldErrors(next);
+    if (next.name || next.email || next.message) event.preventDefault();
+  }
 
   return (
     <section className="w-full scroll-mt-20 bg-surface-container-low py-space-xl" id="contact">
@@ -31,32 +45,51 @@ export function ContactSection() {
           {state?.ok ? (
             <p className="font-body-md text-body-md text-primary">{state.message}</p>
           ) : (
-            <form action={formAction} className="flex flex-col gap-space-md">
+            <form action={formAction} className="flex flex-col gap-space-md" noValidate onSubmit={onSubmit}>
               <label className="flex flex-col gap-1">
                 <span className="font-label-sm text-label-sm text-primary">Name</span>
-                <input name="name" required type="text" className={fieldClass} />
+                <input
+                  name="name"
+                  required
+                  type="text"
+                  autoComplete="name"
+                  maxLength={120}
+                  className={fieldClass}
+                  aria-invalid={fieldErrors.name ? true : undefined}
+                />
+                {fieldErrors.name ? <span className="font-body-sm text-body-sm text-error">{fieldErrors.name}</span> : null}
               </label>
               <label className="flex flex-col gap-1">
-                <span className="font-label-sm text-label-sm text-primary">
-                  Email address
-                </span>
-                <input name="email" required type="email" className={fieldClass} />
+                <span className="font-label-sm text-label-sm text-primary">Email address</span>
+                <input
+                  name="email"
+                  required
+                  type="email"
+                  autoComplete="email"
+                  maxLength={160}
+                  className={fieldClass}
+                  aria-invalid={fieldErrors.email ? true : undefined}
+                />
+                {fieldErrors.email ? (
+                  <span className="font-body-sm text-body-sm text-error">{fieldErrors.email}</span>
+                ) : null}
               </label>
               <label className="flex flex-col gap-1">
-                <span className="font-label-sm text-label-sm text-primary">
-                  Message
-                </span>
+                <span className="font-label-sm text-label-sm text-primary">Message</span>
                 <textarea
                   name="message"
                   required
                   minLength={10}
+                  maxLength={2000}
                   rows={5}
                   className={fieldClass}
+                  aria-invalid={fieldErrors.message ? true : undefined}
                 />
+                {fieldErrors.message ? (
+                  <span className="font-body-sm text-body-sm text-error">{fieldErrors.message}</span>
+                ) : null}
               </label>
-              {state?.message ? (
-                <p className="font-body-sm text-body-sm text-error">{state.message}</p>
-              ) : null}
+              {state?.message ? <p className="font-body-sm text-body-sm text-error">{state.message}</p> : null}
               <button
                 type="submit"
                 disabled={pending}

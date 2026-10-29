@@ -319,6 +319,7 @@ export async function ParentPanel({
             reward: opening.reward,
             fee: opening.fee,
             deadline: opening.deadline,
+            participationMessage: opening.participationMessage,
           }}
           savedChildren={children}
         />

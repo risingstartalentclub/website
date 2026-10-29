@@ -9,6 +9,7 @@ import { ageError, genderError, instagramError } from "@/lib/validation";
 export type EntryState = {
   ok: boolean;
   message: string;
+  instruction?: string;
 } | null;
 
 const schemaMessage =
@@ -61,11 +62,20 @@ export async function submitEntry(
   const limited = await limitEntry(parent.email);
   if (!limited.allowed) return { ok: false, message: limited.message };
 
-  const { data: contest, error: contestError } = await supabase
+  let { data: contest, error: contestError } = await supabase
     .from("contests")
-    .select("name, registration_status")
+    .select("name, registration_status, participation_message")
     .eq("slug", contestSlug)
     .maybeSingle();
+  if (contestError?.code === "42703") {
+    const retry = await supabase
+      .from("contests")
+      .select("name, registration_status")
+      .eq("slug", contestSlug)
+      .maybeSingle();
+    contest = retry.data ? { ...retry.data, participation_message: null } : null;
+    contestError = retry.error;
+  }
   if (contestError) {
     return { ok: false, message: "We could not open this contest. Please try again in a moment." };
   }
@@ -148,8 +158,13 @@ export async function submitEntry(
   }
 
   revalidatePath("/parent-panel");
+  const instruction =
+    contest && "participation_message" in contest && typeof contest.participation_message === "string"
+      ? contest.participation_message
+      : "";
   return {
     ok: true,
     message: `${participantName} is entered. You can add another child to this contest.`,
+    instruction,
   };
 }

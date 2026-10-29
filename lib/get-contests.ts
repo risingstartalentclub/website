@@ -16,10 +16,13 @@ export type ContestRow = {
   registration_status: string;
   age_range: string;
   is_hero?: boolean;
+  participation_message?: string | null;
 };
 
-const contestColumns =
+const contestColumnsLegacy =
   "slug, name, banner_url, description, reward, entry_fee, start_date, end_date, result_date, registration_status, age_range, is_hero, sort_order";
+
+const contestColumns = `${contestColumnsLegacy}, participation_message`;
 
 function dayLabel(value: string) {
   const [year, month, day] = value.slice(0, 10).split("-").map(Number);
@@ -61,6 +64,8 @@ export function contestFromRow(row: ContestRow): Contest {
     startDate: typeof row.start_date === "string" ? row.start_date.slice(0, 10) : "",
     endDate: end,
     resultDate: typeof row.result_date === "string" ? row.result_date.slice(0, 10) : "",
+    participationMessage:
+      typeof row.participation_message === "string" ? row.participation_message : "",
   };
 }
 
@@ -75,11 +80,21 @@ export async function getContests(sample = true): Promise<Contest[]> {
   const supabase = createClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("contests")
     .select(contestColumns)
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: true });
+
+  if (error?.code === "42703") {
+    const retry = await supabase
+      .from("contests")
+      .select(contestColumnsLegacy)
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true });
+    data = retry.data as typeof data;
+    error = retry.error;
+  }
 
   if (error || !data) return sample ? contests : [];
   if (data.length === 0) return [];
@@ -90,4 +105,4 @@ export async function getContests(sample = true): Promise<Contest[]> {
   });
 }
 
-export { contestColumns };
+export { contestColumns, contestColumnsLegacy };

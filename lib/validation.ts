@@ -75,6 +75,27 @@ export function instagramError(value: string, required = false) {
   }
 }
 
+function unsafeText(value: string) {
+  return /[<>]/.test(value) || /javascript\s*:/i.test(value);
+}
+
+export function contactNameError(value: string) {
+  const name = value.trim().replace(/\s+/g, " ");
+  if (name.length < 2 || name.length > 120) return "Enter your name.";
+  if (unsafeText(name)) return "Name cannot include scripts or HTML.";
+  if (!/^[\p{L}][\p{L}\s.'-]*$/u.test(name)) return "Use letters in the name.";
+  return null;
+}
+
+export function contactMessageError(value: string) {
+  const message = value.trim();
+  if (message.length < 10) return "Write a message of at least 10 characters.";
+  if (message.length > 2000) return "Keep the message under 2000 characters.";
+  if (unsafeText(message)) return "Message cannot include scripts or HTML.";
+  if (!/[\p{L}]/u.test(message)) return "Write the message in words.";
+  return null;
+}
+
 export function passwordError(value: string, mode: "login" | "signup") {
   if (!value) return "Enter a password.";
   if (value.length > 72) return "Use a password of 72 characters or fewer.";

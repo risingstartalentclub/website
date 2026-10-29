@@ -3,6 +3,7 @@
 import { type ReactNode } from "react";
 import Link from "next/link";
 import { AdminContests } from "@/components/admin-contests";
+import { AdminEnquiries } from "@/components/admin-enquiries";
 import type { ContestEntryRow } from "@/components/admin-winners";
 import { AdminDashboard } from "@/components/admin-dashboard";
 import { AdminPeople } from "@/components/admin-people";
@@ -11,6 +12,7 @@ import {
   adminPath,
   adminSections,
   type AdminCounts,
+  type AdminEnquiry,
   type AdminPerson,
   type AdminSectionId,
 } from "@/lib/admin-path";
@@ -32,6 +34,10 @@ const sectionCopy: Record<AdminSectionId, { title: string; body: string }> = {
   users: {
     title: "Parent List",
     body: "Parents who created an account on the website.",
+  },
+  enquiries: {
+    title: "Enquiry List",
+    body: "Messages sent from Contact Us.",
   },
 };
 
@@ -67,6 +73,12 @@ function MenuIcon({
         <circle cx="16.2" cy="9" r="2.1" />
         <path d="M3.8 18.5c.5-2.6 2.6-4.2 5.2-4.2s4.7 1.6 5.2 4.2" />
         <path d="M14.2 14.4c1.6.2 3 .9 3.8 2.4" />
+      </>
+    ),
+    enquiries: (
+      <>
+        <path d="M4 6.5h16v11H4z" />
+        <path d="m4 7 8 6 8-6" />
       </>
     ),
     logout: (
@@ -112,6 +124,8 @@ export function AdminDesk({
   contestSlug,
   people,
   peopleReady,
+  enquiries,
+  enquiriesReady,
   counts,
   countsReady,
 }: {
@@ -126,6 +140,8 @@ export function AdminDesk({
   contestSlug?: string | null;
   people: AdminPerson[];
   peopleReady: boolean;
+  enquiries: AdminEnquiry[];
+  enquiriesReady: boolean;
   counts: AdminCounts;
   countsReady: boolean;
 }) {
@@ -225,6 +241,7 @@ export function AdminDesk({
           {section === "users" ? (
             <AdminPeople people={people} ready={peopleReady} emptyLabel="No parents yet." />
           ) : null}
+          {section === "enquiries" ? <AdminEnquiries enquiries={enquiries} ready={enquiriesReady} /> : null}
         </div>
       </div>
     </div>

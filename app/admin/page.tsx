@@ -4,11 +4,12 @@ import { Suspense } from "react";
 import { AdminDesk } from "@/components/admin-desk";
 import type { ContestEntryRow } from "@/components/admin-winners";
 import { contests as fallbackContests } from "@/lib/content";
-import { contestColumns, contestFromRow, type ContestRow } from "@/lib/get-contests";
+import { contestColumns, contestColumnsLegacy, contestFromRow, type ContestRow } from "@/lib/get-contests";
 import {
   adminSection,
   adminSections,
   type AdminCounts,
+  type AdminEnquiry,
   type AdminPerson,
 } from "@/lib/admin-path";
 import { getSiteImages } from "@/lib/get-site-images";
@@ -54,6 +55,26 @@ function peopleFromRows(rows: unknown): AdminPerson[] {
         city: typeof record.city === "string" ? record.city : "",
         state: typeof record.state === "string" ? record.state : "",
         joined: typeof record.created_at === "string" ? joinedLabel(record.created_at) : "—",
+      },
+    ];
+  });
+}
+
+function enquiriesFromRows(rows: unknown): AdminEnquiry[] {
+  if (!Array.isArray(rows)) return [];
+  return rows.flatMap((row) => {
+    if (!row || typeof row !== "object") return [];
+    const record = row as Record<string, unknown>;
+    if (typeof record.id !== "string" || typeof record.name !== "string" || typeof record.email !== "string") {
+      return [];
+    }
+    return [
+      {
+        id: record.id,
+        name: record.name,
+        email: record.email,
+        message: typeof record.message === "string" ? record.message : "",
+        received: typeof record.created_at === "string" ? joinedLabel(record.created_at) : "—",
       },
     ];
   });
@@ -135,9 +156,10 @@ async function AdminGate({
   const current = adminSection(section);
   const needsContests = current === "contests";
   const needsPeople = current === "admins" || current === "users";
+  const needsEnquiries = current === "enquiries";
   const needsCounts = current === "dashboard";
   const supabase = await createClient("admin");
-  const [viewer, images, contestResult, peopleResult, countsResult, entryResult, announcedResult] =
+  const [viewer, images, contestResult, peopleResult, countsResult, entryResult, announcedResult, enquiryResult] =
     await Promise.all([
       getViewer("admin"),
       getSiteImages(),
@@ -159,10 +181,25 @@ async function AdminGate({
             .order("created_at", { ascending: true })
         : Promise.resolve(null),
       needsContests ? supabase.from("contests").select("slug, results_announced") : Promise.resolve(null),
+      needsEnquiries
+        ? supabase
+            .from("contact_messages")
+            .select("id, name, email, message, created_at")
+            .order("created_at", { ascending: false })
+            .limit(200)
+        : Promise.resolve(null),
     ]);
 
   if (!viewer.signedIn) redirect("/admin/login");
   if (!viewer.isAdmin) notFound();
+
+  let contestsResult = contestResult;
+  if (needsContests && contestsResult?.error?.code === "42703") {
+    contestsResult = (await supabase
+      .from("contests")
+      .select(contestColumnsLegacy)
+      .order("sort_order", { ascending: true })) as typeof contestsResult;
+  }
 
   const countRow = Array.isArray(countsResult?.data) ? countsResult.data[0] : countsResult?.data;
 
@@ -171,11 +208,11 @@ async function AdminGate({
       section={current}
       logo={images.logo}
       viewerName={viewer.name}
-      contestsReady={!contestResult?.error}
+      contestsReady={!contestsResult?.error}
       contests={
-        contestResult?.error
+        contestsResult?.error
           ? fallbackContests
-          : (contestResult?.data ?? []).map((row) => contestFromRow(row as ContestRow))
+          : (contestsResult?.data ?? []).map((row) => contestFromRow(row as ContestRow))
       }
       entriesReady={!entryResult?.error}
       entries={entriesFromRows(entryResult?.data)}
@@ -183,6 +220,8 @@ async function AdminGate({
       contestSlug={current === "contests" ? contestQuery(contest) : null}
       peopleReady={!peopleResult?.error}
       people={peopleFromRows(peopleResult?.data)}
+      enquiriesReady={!enquiryResult?.error}
+      enquiries={enquiriesFromRows(enquiryResult?.data)}
       countsReady={!countsResult?.error}
       counts={countsResult?.error ? emptyCounts : countsFromRow(countRow)}
     />

@@ -11,6 +11,7 @@ export const adminSections = [
   { id: "contests", label: "Contests" },
   { id: "admins", label: "Admin List" },
   { id: "users", label: "Parent List" },
+  { id: "enquiries", label: "Enquiry List" },
 ] as const;
 
 export type AdminSectionId = (typeof adminSections)[number]["id"];
@@ -33,6 +34,14 @@ export type AdminCounts = {
   contests: number;
   openContests: number;
   heroTitle: string | null;
+};
+
+export type AdminEnquiry = {
+  id: string;
+  name: string;
+  email: string;
+  message: string;
+  received: string;
 };
 
 export type AdminPerson = {

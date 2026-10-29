@@ -28,6 +28,7 @@ export type Contest = {
   startDate?: string;
   endDate?: string;
   resultDate?: string;
+  participationMessage?: string;
 };
 
 export const contests: Contest[] = [

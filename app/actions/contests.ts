@@ -54,6 +54,7 @@ function cardFromForm(formData: FormData) {
   const resultDate = dateValue(formData, "resultDate");
   const registrationStatus = text(formData, "registrationStatus", 20) === "closed" ? "closed" : "open";
   const isHero = formData.get("isHero") === "on";
+  const participationMessage = text(formData, "participationMessage", 800);
 
   if (name.length < 2) return { error: "Enter the contest name." };
   if (description.length < 10) return { error: "Enter a short description." };
@@ -63,6 +64,12 @@ function cardFromForm(formData: FormData) {
   if (!startDate || !endDate || !resultDate) return { error: "Enter the start, end, and result dates." };
   if (startDate > endDate || endDate > resultDate) {
     return { error: "The start date must be on or before the end date, and the result date must be on or after the end date." };
+  }
+  if (participationMessage.length < 10) {
+    return { error: "Enter the thank-you or instruction parents see after they enter." };
+  }
+  if (/[<>]/.test(participationMessage) || /javascript\s*:/i.test(participationMessage)) {
+    return { error: "The message after participation cannot include scripts or HTML." };
   }
 
   return {
@@ -77,12 +84,16 @@ function cardFromForm(formData: FormData) {
       result_date: resultDate,
       registration_status: registrationStatus,
       is_hero: isHero,
+      participation_message: participationMessage,
     },
   };
 }
 
 function failed(error: { code?: string; message?: string }) {
-  if (error.code === "42P01" || error.code === "42703" || error.message?.includes("contests")) {
+  if (error.code === "42703") {
+    return "Run supabase/8-participation-message.sql in the Supabase SQL editor, then save the contest again.";
+  }
+  if (error.code === "42P01" || error.message?.includes("contests")) {
     return setupMessage;
   }
   return "The contest could not be saved. Please try again.";

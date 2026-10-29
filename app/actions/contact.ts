@@ -3,7 +3,7 @@
 import { limitContact } from "@/lib/public-limits";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured, supabaseSetupMessage } from "@/lib/supabase/env";
-import { emailError, normalizeEmail } from "@/lib/validation";
+import { contactMessageError, contactNameError, emailError, normalizeEmail } from "@/lib/validation";
 
 export type ContactState = {
   ok: boolean;
@@ -14,23 +14,16 @@ export async function sendMessage(
   _previous: ContactState,
   formData: FormData,
 ): Promise<ContactState> {
-  const name = String(formData.get("name") ?? "").trim();
+  const name = String(formData.get("name") ?? "").trim().replace(/\s+/g, " ");
   const email = normalizeEmail(String(formData.get("email") ?? ""));
   const message = String(formData.get("message") ?? "").trim();
 
-  if (name.length < 2 || name.length > 120) {
-    return { ok: false, message: "Enter your name." };
-  }
+  const invalidName = contactNameError(name);
+  if (invalidName) return { ok: false, message: invalidName };
   const invalidEmail = emailError(email);
-  if (invalidEmail) {
-    return { ok: false, message: invalidEmail };
-  }
-  if (message.length < 10 || message.length > 2000) {
-    return {
-      ok: false,
-      message: "Write a message of at least 10 characters.",
-    };
-  }
+  if (invalidEmail) return { ok: false, message: invalidEmail };
+  const invalidMessage = contactMessageError(message);
+  if (invalidMessage) return { ok: false, message: invalidMessage };
   if (!isSupabaseConfigured()) {
     return { ok: false, message: supabaseSetupMessage };
   }

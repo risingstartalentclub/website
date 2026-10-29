@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useCallback, useEffect, useRef, useState } from "react";
+import { useActionState, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { deleteContest, saveContest, type ContestState } from "@/app/actions/contests";
@@ -10,7 +10,10 @@ import { adminPath } from "@/lib/admin-path";
 import type { Contest } from "@/lib/content";
 
 const fieldClass =
-  "font-body-sm text-body-sm w-full rounded-lg bg-surface px-3 py-2 text-on-surface shadow-sm outline-none";
+  "font-body-md text-body-md w-full rounded-lg border border-surface-variant bg-surface px-3 py-2.5 text-on-surface outline-none focus:border-secondary";
+
+const imageTypes = ["image/jpeg", "image/png", "image/webp"];
+const maxImageBytes = 5 * 1024 * 1024;
 
 function formatDate(value?: string) {
   if (!value) return "—";
@@ -19,11 +22,30 @@ function formatDate(value?: string) {
   return new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric" }).format(date);
 }
 
+function Field({
+  label,
+  hint,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  children: ReactNode;
+}) {
+  return (
+    <label className="flex flex-col gap-1.5">
+      <span className="font-label-sm text-label-sm font-bold text-primary">{label}</span>
+      {hint ? <span className="font-body-sm text-body-sm -mt-1 text-on-surface-variant">{hint}</span> : null}
+      {children}
+    </label>
+  );
+}
+
 function ContestEditor({ contest, onClose }: { contest: Contest | null; onClose: () => void }) {
   const [state, action, pending] = useActionState<ContestState, FormData>(saveContest, null);
   const [removeState, remove, removing] = useActionState<ContestState, FormData>(deleteContest, null);
-  const [viewing, setViewing] = useState(false);
   const [pickedUrl, setPickedUrl] = useState<string | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const [imageError, setImageError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const current = contest;
   const preview = pickedUrl || current?.image || "";
@@ -36,19 +58,14 @@ function ContestEditor({ contest, onClose }: { contest: Contest | null; onClose:
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     function onKey(event: KeyboardEvent) {
-      if (event.key !== "Escape") return;
-      if (viewing) {
-        setViewing(false);
-        return;
-      }
-      onClose();
+      if (event.key === "Escape") onClose();
     }
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", onKey);
     };
-  }, [onClose, viewing]);
+  }, [onClose]);
 
   useEffect(() => {
     return () => {
@@ -56,8 +73,22 @@ function ContestEditor({ contest, onClose }: { contest: Contest | null; onClose:
     };
   }, [pickedUrl]);
 
-  function chooseImage() {
-    fileRef.current?.click();
+  function takeImage(file: File | undefined) {
+    if (!file) return;
+    if (!imageTypes.includes(file.type) || file.size > maxImageBytes) {
+      setImageError("Use a JPG, PNG, or WebP image up to 5 MB.");
+      return;
+    }
+    setImageError("");
+    if (fileRef.current) {
+      const data = new DataTransfer();
+      data.items.add(file);
+      fileRef.current.files = data.files;
+    }
+    setPickedUrl((previous) => {
+      if (previous) URL.revokeObjectURL(previous);
+      return URL.createObjectURL(file);
+    });
   }
 
   return (
@@ -101,88 +132,116 @@ function ContestEditor({ contest, onClose }: { contest: Contest | null; onClose:
           type="file"
           accept="image/jpeg,image/png,image/webp"
           className="sr-only"
-          onChange={(event) => {
-            const file = event.target.files?.[0];
-            setPickedUrl((previous) => {
-              if (previous) URL.revokeObjectURL(previous);
-              return file ? URL.createObjectURL(file) : null;
-            });
-          }}
+          onChange={(event) => takeImage(event.target.files?.[0])}
         />
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-          <div className="flex min-w-0 flex-1 flex-col gap-3">
-            <label className="flex flex-col gap-1">
-              <span className="font-label-sm text-label-sm text-primary">Name</span>
-              <input name="name" required defaultValue={current?.title ?? ""} className={fieldClass} maxLength={120} />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="font-label-sm text-label-sm text-primary">Description</span>
-              <textarea name="description" required defaultValue={current?.description ?? ""} className={fieldClass} rows={3} maxLength={800} />
-            </label>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="flex flex-col gap-1">
-                <span className="font-label-sm text-label-sm text-primary">Age range</span>
-                <input name="ageRange" required defaultValue={current?.ageRange ?? ""} className={fieldClass} maxLength={40} placeholder="4-12 years" />
-              </label>
-              <label className="flex flex-col gap-1">
-                <span className="font-label-sm text-label-sm text-primary">Registration status</span>
-                <select name="registrationStatus" defaultValue={current?.status ?? "open"} className={fieldClass}>
-                  <option value="open">Open</option>
-                  <option value="closed">Closed</option>
-                </select>
-              </label>
-              <label className="flex flex-col gap-1">
-                <span className="font-label-sm text-label-sm text-primary">Reward</span>
-                <input name="reward" required defaultValue={current?.reward ?? ""} className={fieldClass} maxLength={120} />
-              </label>
-              <label className="flex flex-col gap-1">
-                <span className="font-label-sm text-label-sm text-primary">Entry fee (₹)</span>
-                <input name="entryFee" required type="number" min="0" step="1" defaultValue={current?.entryFee ?? "0"} className={fieldClass} />
-              </label>
-              <label className="flex flex-col gap-1">
-                <span className="font-label-sm text-label-sm text-primary">Start date</span>
-                <input name="startDate" required type="date" defaultValue={current?.startDate ?? ""} className={fieldClass} />
-              </label>
-              <label className="flex flex-col gap-1">
-                <span className="font-label-sm text-label-sm text-primary">End date</span>
-                <input name="endDate" required type="date" defaultValue={current?.endDate ?? ""} className={fieldClass} />
-              </label>
-              <label className="flex flex-col gap-1">
-                <span className="font-label-sm text-label-sm text-primary">Result date</span>
-                <input name="resultDate" required type="date" defaultValue={current?.resultDate ?? ""} className={fieldClass} />
-              </label>
-            </div>
-            <label className="flex items-start gap-2">
-              <input name="isHero" type="checkbox" defaultChecked={current?.isHero ?? false} className="mt-1" />
-              <span className="font-body-sm text-body-sm text-on-surface">
-                Show this contest on the homepage. Only one contest can be featured. Saving replaces the current homepage contest.
-              </span>
-            </label>
-          </div>
-          <div className="flex w-full shrink-0 flex-col gap-2 sm:w-36">
+
+        <section className="flex flex-col gap-2">
+          <p className="font-label-sm text-label-sm font-bold tracking-wide text-primary uppercase">Banner</p>
+          <div
+            className={`relative overflow-hidden rounded-xl border-2 border-dashed ${
+              dragging ? "border-secondary bg-secondary-fixed/50" : "border-surface-variant bg-surface"
+            }`}
+            onDragOver={(event) => {
+              event.preventDefault();
+              setDragging(true);
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(event) => {
+              event.preventDefault();
+              setDragging(false);
+              takeImage(event.dataTransfer.files?.[0]);
+            }}
+          >
             {preview ? (
-              <img src={preview} alt="" className="h-36 w-full rounded-lg object-cover bg-surface" />
+              <img src={preview} alt="" className="h-52 w-full object-cover" />
             ) : (
-              <div className="font-body-sm text-body-sm flex h-36 w-full items-center justify-center rounded-lg bg-surface text-center text-on-surface-variant">
-                No image
+              <div className="flex h-52 flex-col items-center justify-center px-6 text-center">
+                <p className="font-body-md text-body-md text-primary">Drop the banner here</p>
+                <p className="font-body-sm text-body-sm mt-1 text-on-surface-variant">or choose a file. JPG, PNG, or WebP, up to 5 MB.</p>
               </div>
             )}
-            <button
-              type="button"
-              onClick={() => setViewing(true)}
-              className="font-label-md text-label-md rounded-lg bg-surface-container px-3 py-2 font-semibold text-primary"
-            >
-              View image
-            </button>
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-surface-variant bg-surface-container-lowest px-3 py-2">
+              <p className="font-body-sm text-body-sm text-on-surface-variant">
+                {preview ? "Drop a new image here, or choose another file." : "No image selected yet."}
+              </p>
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className="font-label-md text-label-md rounded-lg bg-primary-container px-3 py-2 font-bold text-on-primary"
+              >
+                Choose image
+              </button>
+            </div>
           </div>
-        </div>
+          {imageError ? <p className="font-body-sm text-body-sm text-error">{imageError}</p> : null}
+        </section>
+
+        <section className="grid gap-4 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <Field label="Name">
+              <input name="name" required defaultValue={current?.title ?? ""} className={fieldClass} maxLength={120} />
+            </Field>
+          </div>
+          <div className="sm:col-span-2">
+            <Field label="Description">
+              <textarea name="description" required defaultValue={current?.description ?? ""} className={fieldClass} rows={3} maxLength={800} />
+            </Field>
+          </div>
+          <Field label="Age range" hint="Who can enter, such as 4-12 years.">
+            <input name="ageRange" required defaultValue={current?.ageRange ?? ""} className={fieldClass} maxLength={40} placeholder="4-12 years" />
+          </Field>
+          <Field label="Registration status">
+            <select name="registrationStatus" defaultValue={current?.status ?? "open"} className={fieldClass}>
+              <option value="open">Open</option>
+              <option value="closed">Closed</option>
+            </select>
+          </Field>
+          <Field label="Reward">
+            <input name="reward" required defaultValue={current?.reward ?? ""} className={fieldClass} maxLength={120} />
+          </Field>
+          <Field label="Entry fee (₹)" hint="Use 0 for free entry.">
+            <input name="entryFee" required type="number" min="0" step="1" defaultValue={current?.entryFee ?? "0"} className={fieldClass} />
+          </Field>
+          <Field label="Start date">
+            <input name="startDate" required type="date" defaultValue={current?.startDate ?? ""} className={fieldClass} />
+          </Field>
+          <Field label="End date">
+            <input name="endDate" required type="date" defaultValue={current?.endDate ?? ""} className={fieldClass} />
+          </Field>
+          <Field label="Result date">
+            <input name="resultDate" required type="date" defaultValue={current?.resultDate ?? ""} className={fieldClass} />
+          </Field>
+        </section>
+
+        <Field
+          label="After participation"
+          hint="Thank-you or instruction shown to the parent right after they enter this contest."
+        >
+          <textarea
+            name="participationMessage"
+            required
+            defaultValue={current?.participationMessage ?? ""}
+            className={fieldClass}
+            rows={4}
+            maxLength={800}
+            placeholder="Thank you for entering. Send one clear photo to the club within 3 days."
+          />
+        </Field>
+
+        <label className="flex items-start gap-2 rounded-lg bg-surface px-3 py-3">
+          <input name="isHero" type="checkbox" defaultChecked={current?.isHero ?? false} className="mt-1" />
+          <span className="font-body-sm text-body-sm text-on-surface">
+            Show this contest on the homepage. Only one contest can be featured. Saving replaces the current homepage contest.
+          </span>
+        </label>
+
         {state?.error ? <p className="font-body-sm text-body-sm text-error">{state.error}</p> : null}
         {removeState?.error ? <p className="font-body-sm text-body-sm text-error">{removeState.error}</p> : null}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 border-t border-surface-variant pt-4">
           <button
             type="submit"
             disabled={pending}
-            className="font-label-md text-label-md rounded-lg bg-primary-container px-4 py-2 font-bold text-on-primary disabled:opacity-70"
+            className="font-label-md text-label-md rounded-lg bg-primary-container px-4 py-2.5 font-bold text-on-primary disabled:opacity-70"
           >
             {pending ? "Saving..." : current ? "Save contest" : "Add contest"}
           </button>
@@ -191,52 +250,12 @@ function ContestEditor({ contest, onClose }: { contest: Contest | null; onClose:
               type="submit"
               formAction={remove}
               disabled={removing}
-              className="font-label-md text-label-md rounded-lg bg-surface-container px-4 py-2 text-primary disabled:opacity-70"
+              className="font-label-md text-label-md rounded-lg bg-surface-container px-4 py-2.5 text-primary disabled:opacity-70"
             >
               {removing ? "Removing..." : "Delete"}
             </button>
           ) : null}
         </div>
-        {viewing ? (
-          <div
-            className="fixed inset-0 z-[80] flex items-center justify-center bg-primary/60 p-4 backdrop-blur-sm"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Contest image"
-          >
-            <div className="relative flex w-full max-w-lg flex-col gap-3 rounded-xl bg-surface-container-lowest p-4 shadow-2xl">
-              <button
-                aria-label="Close"
-                className="absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-surface-container text-primary"
-                type="button"
-                onClick={() => setViewing(false)}
-              >
-                <Icon name="close" className="text-[20px]" />
-              </button>
-              {preview ? (
-                <img src={preview} alt="" className="mt-8 max-h-[60vh] w-full rounded-lg object-contain bg-surface" />
-              ) : (
-                <p className="font-body-md text-body-md mt-8 text-on-surface-variant">No image yet.</p>
-              )}
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={chooseImage}
-                  className="font-label-md text-label-md rounded-lg bg-surface-container px-4 py-2 font-bold text-primary"
-                >
-                  Change image
-                </button>
-                <button
-                  type="submit"
-                  disabled={pending}
-                  className="font-label-md text-label-md rounded-lg bg-primary-container px-4 py-2 font-bold text-on-primary disabled:opacity-70"
-                >
-                  {pending ? "Saving..." : "Save"}
-                </button>
-              </div>
-            </div>
-          </div>
-        ) : null}
       </form>
     </div>
   );
