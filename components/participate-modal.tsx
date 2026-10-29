@@ -26,7 +26,7 @@ export type SavedChild = {
 
 const initialState: EntryState = null;
 const fieldClass =
-  "font-body-md text-body-md w-full rounded-lg bg-surface px-3 py-2 text-on-surface shadow-sm outline-none focus:bg-surface-container-lowest";
+  "font-body-md text-body-md w-full rounded-xl border-2 border-secondary-fixed bg-surface px-4 py-3 text-on-surface outline-none placeholder:text-on-surface-variant focus:border-secondary";
 
 function EntryRound({
   contest,
@@ -42,6 +42,8 @@ function EntryRound({
   const router = useRouter();
   const [state, formAction, pending] = useActionState(submitEntry, initialState);
   const [mode, setMode] = useState<"saved" | "new">(startNew || savedChildren.length === 0 ? "new" : "saved");
+  const [gender, setGender] = useState<"" | "boy" | "girl">("");
+  const [pickedChild, setPickedChild] = useState(savedChildren[0]?.id ?? "");
   const [fieldErrors, setFieldErrors] = useState<{
     fullName?: string;
     age?: string;
@@ -92,59 +94,90 @@ function EntryRound({
     );
   }
 
+  function genderClass(value: "boy" | "girl") {
+    if (gender === value) return "border-primary bg-primary-container text-on-primary";
+    if (fieldErrors.gender) return "border-error bg-surface text-primary";
+    return "border-surface-variant bg-surface text-primary";
+  }
+
   return (
     <form className="flex flex-col gap-space-sm" action={formAction} noValidate onSubmit={onSubmit}>
       <input type="hidden" name="contestSlug" value={contest.slug} />
       {mode === "saved" ? (
-        <div>
-          <label className="font-label-sm text-label-sm mb-1 block text-primary" htmlFor={`${contest.slug}-child`}>
-            Choose a child
-          </label>
-          <select id={`${contest.slug}-child`} name="participantId" className={fieldClass} defaultValue={savedChildren[0]?.id}>
-            {savedChildren.map((child) => (
-              <option key={child.id} value={child.id}>
-                {child.fullName} · {child.age} · {child.gender === "boy" ? "Boy" : "Girl"}
-              </option>
-            ))}
-          </select>
+        <div className="rounded-2xl bg-surface-container-low p-4">
+          <p className="font-label-sm text-label-sm tracking-wider text-secondary uppercase">Saved children</p>
+          <fieldset className="mt-3 flex flex-col gap-2">
+            <legend className="sr-only">Choose a child</legend>
+            {savedChildren.map((child) => {
+              const selected = pickedChild === child.id;
+              return (
+                <label
+                  key={child.id}
+                  className={`flex cursor-pointer items-center justify-between gap-3 rounded-xl border-2 px-4 py-3 ${
+                    selected ? "border-primary bg-primary-container text-on-primary" : "border-transparent bg-surface text-primary"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="participantId"
+                    value={child.id}
+                    checked={selected}
+                    onChange={() => setPickedChild(child.id)}
+                    className="sr-only"
+                  />
+                  <span className="font-body-md text-body-md font-semibold">{child.fullName}</span>
+                  <span className={`font-label-sm text-label-sm ${selected ? "text-on-primary/80" : "text-on-surface-variant"}`}>
+                    Age {child.age} · {child.gender === "boy" ? "Boy" : "Girl"}
+                  </span>
+                </label>
+              );
+            })}
+          </fieldset>
           <button
             type="button"
-            className="font-label-md text-label-md mt-2 font-semibold text-secondary"
+            className="font-label-md text-label-md mt-3 w-full rounded-xl bg-surface px-4 py-3 font-bold text-secondary"
             onClick={() => setMode("new")}
           >
-            Add another child
+            Add a new child
           </button>
         </div>
       ) : (
-        <>
+        <div className="rounded-2xl bg-surface-container-low p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="font-label-sm text-label-sm tracking-wider text-secondary uppercase">Add a child</p>
+              <p className="font-body-sm text-body-sm mt-1 text-on-surface-variant">This name is printed on the certificate.</p>
+            </div>
+          </div>
           {savedChildren.length > 0 ? (
             <button
               type="button"
-              className="font-label-md text-label-md self-start font-semibold text-secondary"
+              className="font-label-md text-label-md mt-3 w-full rounded-xl bg-surface px-4 py-3 font-bold text-secondary"
               onClick={() => setMode("saved")}
             >
               Choose a saved child
             </button>
           ) : null}
-          <div>
-            <label className="font-label-sm text-label-sm mb-1 block text-primary" htmlFor={`${contest.slug}-name`}>
-              Full name for certificate
-            </label>
-            <input
-              id={`${contest.slug}-name`}
-              name="fullName"
-              required
-              type="text"
-              minLength={2}
-              maxLength={120}
-              aria-invalid={fieldErrors.fullName ? true : undefined}
-              className={fieldClass}
-            />
-            {fieldErrors.fullName ? <p className="font-body-sm text-body-sm mt-1 text-error">{fieldErrors.fullName}</p> : null}
-          </div>
-          <div className="grid grid-cols-2 gap-space-sm">
+          <div className="mt-4 flex flex-col gap-4">
             <div>
-              <label className="font-label-sm text-label-sm mb-1 block text-primary" htmlFor={`${contest.slug}-age`}>
+              <label className="font-label-sm text-label-sm mb-1.5 block font-bold text-primary" htmlFor={`${contest.slug}-name`}>
+                Full name for certificate
+              </label>
+              <input
+                id={`${contest.slug}-name`}
+                name="fullName"
+                required
+                type="text"
+                minLength={2}
+                maxLength={120}
+                placeholder="Name as it should appear"
+                aria-invalid={fieldErrors.fullName ? true : undefined}
+                className={fieldClass}
+              />
+              {fieldErrors.fullName ? <p className="font-body-sm text-body-sm mt-1 text-error">{fieldErrors.fullName}</p> : null}
+            </div>
+            <div>
+              <label className="font-label-sm text-label-sm mb-1.5 block font-bold text-primary" htmlFor={`${contest.slug}-age`}>
                 Age
               </label>
               <input
@@ -155,45 +188,57 @@ function EntryRound({
                 min={0}
                 max={21}
                 inputMode="numeric"
+                placeholder="0 to 21"
                 aria-invalid={fieldErrors.age ? true : undefined}
                 className={fieldClass}
               />
               {fieldErrors.age ? <p className="font-body-sm text-body-sm mt-1 text-error">{fieldErrors.age}</p> : null}
             </div>
             <fieldset>
-              <legend className="font-label-sm text-label-sm mb-1 text-primary">Boy / Girl</legend>
-              <div className="flex gap-3 py-2">
-                <label className="font-body-md text-body-md flex items-center gap-1.5 text-on-surface">
-                  <input type="radio" name="gender" value="boy" required />
-                  Boy
-                </label>
-                <label className="font-body-md text-body-md flex items-center gap-1.5 text-on-surface">
-                  <input type="radio" name="gender" value="girl" required />
-                  Girl
-                </label>
+              <legend className="font-label-sm text-label-sm mb-1.5 font-bold text-primary">Boy or girl</legend>
+              <div className="grid grid-cols-2 gap-2">
+                {(["boy", "girl"] as const).map((value) => (
+                  <label
+                    key={value}
+                    className={`font-label-md text-label-md flex cursor-pointer items-center justify-center rounded-xl border-2 px-3 py-3 font-bold ${genderClass(value)}`}
+                  >
+                    <input
+                      type="radio"
+                      name="gender"
+                      value={value}
+                      checked={gender === value}
+                      onChange={() => {
+                        setGender(value);
+                        setFieldErrors((current) => ({ ...current, gender: undefined }));
+                      }}
+                      className="sr-only"
+                    />
+                    {value === "boy" ? "Boy" : "Girl"}
+                  </label>
+                ))}
               </div>
-              {fieldErrors.gender ? <p className="font-body-sm text-body-sm text-error">{fieldErrors.gender}</p> : null}
+              {fieldErrors.gender ? <p className="font-body-sm text-body-sm mt-1 text-error">{fieldErrors.gender}</p> : null}
             </fieldset>
+            <div>
+              <label className="font-label-sm text-label-sm mb-1.5 block font-bold text-primary" htmlFor={`${contest.slug}-instagram`}>
+                Instagram profile URL
+              </label>
+              <input
+                id={`${contest.slug}-instagram`}
+                name="instagramUrl"
+                required
+                type="url"
+                placeholder="https://instagram.com/name"
+                maxLength={300}
+                aria-invalid={fieldErrors.instagram ? true : undefined}
+                className={fieldClass}
+              />
+              {fieldErrors.instagram ? (
+                <p className="font-body-sm text-body-sm mt-1 text-error">{fieldErrors.instagram}</p>
+              ) : null}
+            </div>
           </div>
-          <div>
-            <label className="font-label-sm text-label-sm mb-1 block text-primary" htmlFor={`${contest.slug}-instagram`}>
-              Instagram profile URL
-            </label>
-            <input
-              id={`${contest.slug}-instagram`}
-              name="instagramUrl"
-              required
-              type="url"
-              placeholder="https://instagram.com/name"
-              maxLength={300}
-              aria-invalid={fieldErrors.instagram ? true : undefined}
-              className={fieldClass}
-            />
-            {fieldErrors.instagram ? (
-              <p className="font-body-sm text-body-sm mt-1 text-error">{fieldErrors.instagram}</p>
-            ) : null}
-          </div>
-        </>
+        </div>
       )}
       {state?.message ? <p className="font-body-sm text-body-sm text-error">{state.message}</p> : null}
       <button
