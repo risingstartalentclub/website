@@ -56,10 +56,10 @@ export async function signUp(
   }
 
   if (!data.session) {
-    return {
-      message:
-        "Account created. Check your email to confirm it, then log in.",
-    };
+    const signedIn = await supabase.auth.signInWithPassword({ email, password });
+    if (signedIn.error || !signedIn.data.session) {
+      return { error: "Account created, but we could not log you in. Please try again in a moment." };
+    }
   }
 
   redirect("/profile");
@@ -85,6 +85,9 @@ async function authenticate(formData: FormData, scope: "public" | "admin" = "pub
   if (error || !data.user) {
     if (error?.code === "invalid_credentials") {
       return { error: "Those login details did not match an account." };
+    }
+    if (error?.code === "over_request_rate_limit" || error?.status === 429) {
+      return { error: "Too many attempts. Please wait a few minutes and try again." };
     }
     return { error: "We could not log you in. Please try again in a moment." };
   }

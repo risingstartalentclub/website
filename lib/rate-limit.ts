@@ -86,38 +86,38 @@ export function consumeRateLimit(
 
 export function loginSubjects(ip: string, email: string, scope: "public" | "admin"): LimitSubject[] {
   const subjects: LimitSubject[] = [
-    { id: `ip:${ip}`, limit: 20, windowMs: FIFTEEN_MINUTES },
-    { id: `email:${email}`, limit: 5, windowMs: FIFTEEN_MINUTES },
-    { id: "global", limit: 200, windowMs: FIFTEEN_MINUTES },
+    { id: `ip:${ip}`, limit: 40, windowMs: FIFTEEN_MINUTES },
+    { id: `email:${email}`, limit: 10, windowMs: FIFTEEN_MINUTES },
+    { id: "global", limit: 400, windowMs: FIFTEEN_MINUTES },
   ];
   if (scope === "admin") {
-    subjects.push({ id: `admin-ip:${ip}`, limit: 5, windowMs: FIFTEEN_MINUTES });
+    subjects.push({ id: `admin-ip:${ip}`, limit: 10, windowMs: FIFTEEN_MINUTES });
   }
   return subjects;
 }
 
 export function signupSubjects(ip: string, email: string, mobile: string): LimitSubject[] {
   return [
-    { id: `ip:${ip}`, limit: 10, windowMs: ONE_HOUR },
-    { id: `email:${email}`, limit: 3, windowMs: ONE_HOUR },
-    { id: `mobile:${mobile}`, limit: 3, windowMs: ONE_HOUR },
-    { id: "global", limit: 40, windowMs: ONE_HOUR },
+    { id: `ip:${ip}`, limit: 20, windowMs: ONE_HOUR },
+    { id: `email:${email}`, limit: 6, windowMs: ONE_HOUR },
+    { id: `mobile:${mobile}`, limit: 6, windowMs: ONE_HOUR },
+    { id: "global", limit: 80, windowMs: ONE_HOUR },
   ];
 }
 
 export function contactSubjects(ip: string, email: string): LimitSubject[] {
   return [
-    { id: `ip:${ip}`, limit: 8, windowMs: ONE_HOUR },
-    { id: `email:${email}`, limit: 3, windowMs: ONE_HOUR },
-    { id: "global", limit: 40, windowMs: ONE_HOUR },
+    { id: `ip:${ip}`, limit: 16, windowMs: ONE_HOUR },
+    { id: `email:${email}`, limit: 6, windowMs: ONE_HOUR },
+    { id: "global", limit: 80, windowMs: ONE_HOUR },
   ];
 }
 
 export function entrySubjects(ip: string, email: string): LimitSubject[] {
   return [
-    { id: `ip:${ip}`, limit: 20, windowMs: ONE_HOUR },
-    { id: `email:${email}`, limit: 8, windowMs: ONE_HOUR },
-    { id: "global", limit: 200, windowMs: ONE_HOUR },
+    { id: `ip:${ip}`, limit: 40, windowMs: ONE_HOUR },
+    { id: `email:${email}`, limit: 16, windowMs: ONE_HOUR },
+    { id: "global", limit: 400, windowMs: ONE_HOUR },
   ];
 }
 
