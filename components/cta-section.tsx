@@ -1,21 +1,7 @@
-"use client";
-
-import { useState } from "react";
-import { clubRegistration } from "@/lib/content";
+import Link from "next/link";
 import { Icon } from "@/components/icon";
-import { ParticipateModal, type ModalContest } from "@/components/participate-modal";
 
 export function CtaSection() {
-  const [open, setOpen] = useState(false);
-  const contest: ModalContest = {
-    slug: clubRegistration.slug,
-    title: clubRegistration.title,
-    categoryLabel: clubRegistration.categoryLabel,
-    reward: clubRegistration.reward,
-    fee: clubRegistration.fee,
-    deadline: clubRegistration.deadline,
-  };
-
   return (
     <section className="w-full bg-surface-container-low py-space-xl">
       <div className="mx-auto max-w-[1280px] px-margin-mobile md:px-margin">
@@ -43,14 +29,13 @@ export function CtaSection() {
                 <span>Explore Contests</span>
                 <Icon name="arrow_forward" className="text-[18px]" />
               </a>
-              <button
-                type="button"
+              <Link
+                href="/signup"
                 className="font-label-lg text-label-lg inline-flex items-center justify-center gap-space-sm rounded-lg bg-surface-container-lowest px-space-lg py-4 text-primary shadow-md transition-colors hover:bg-surface-container"
-                onClick={() => setOpen(true)}
               >
                 <Icon name="person_add" className="text-[20px] text-secondary" />
                 <span>Create Free Account</span>
-              </button>
+              </Link>
             </div>
             <div className="font-label-sm text-label-sm flex flex-wrap items-center gap-space-md pt-space-xs text-surface-container-high">
               {[
@@ -70,7 +55,6 @@ export function CtaSection() {
           </div>
         </div>
       </div>
-      <ParticipateModal contest={open ? contest : null} onClose={() => setOpen(false)} />
     </section>
   );
 }

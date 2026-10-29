@@ -2,6 +2,7 @@
 
 import { useActionState, useCallback, useEffect, useRef, useState } from "react";
 import { deleteContest, saveContest, type ContestState } from "@/app/actions/contests";
+import { WinnerPicker, type ContestEntryRow } from "@/components/admin-winners";
 import { Icon } from "@/components/icon";
 import type { Contest } from "@/lib/content";
 
@@ -243,12 +244,21 @@ const columns = ["Name", "Age range", "Entry fee", "Start", "End", "Result", "St
 export function AdminContests({
   contests,
   ready,
+  entries,
+  entriesReady,
+  announcedSlugs,
 }: {
   contests: Contest[];
   ready: boolean;
+  entries: ContestEntryRow[];
+  entriesReady: boolean;
+  announcedSlugs: string[];
 }) {
   const [editor, setEditor] = useState<Contest | "new" | null>(null);
+  const [winnersFor, setWinnersFor] = useState<Contest | null>(null);
   const closeEditor = useCallback(() => setEditor(null), []);
+  const closeWinners = useCallback(() => setWinnersFor(null), []);
+  const announced = new Set(announcedSlugs);
 
   return (
     <div className="flex flex-col gap-4">
@@ -317,13 +327,22 @@ export function AdminContests({
                   </td>
                   <td className="font-body-sm text-body-sm px-4 py-3 text-on-surface">{contest.isHero ? "Yes" : "—"}</td>
                   <td className="px-4 py-3 text-right">
-                    <button
-                      type="button"
-                      onClick={() => setEditor(contest)}
-                      className="font-label-md text-label-md rounded-lg bg-surface-container px-3 py-2 font-semibold text-primary"
-                    >
-                      Edit
-                    </button>
+                    <div className="flex justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setWinnersFor(contest)}
+                        className="font-label-md text-label-md rounded-lg bg-tertiary-fixed px-3 py-2 font-semibold text-on-tertiary-fixed"
+                      >
+                        {announced.has(contest.slug) ? "Winners" : "Choose winner"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditor(contest)}
+                        className="font-label-md text-label-md rounded-lg bg-surface-container px-3 py-2 font-semibold text-primary"
+                      >
+                        Edit
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -333,6 +352,17 @@ export function AdminContests({
       )}
       {editor ? (
         <ContestEditor key={editor === "new" ? "new" : editor.slug} contest={editor === "new" ? null : editor} onClose={closeEditor} />
+      ) : null}
+      {winnersFor ? (
+        <WinnerPicker
+          key={winnersFor.slug}
+          contestTitle={winnersFor.title}
+          contestSlug={winnersFor.slug}
+          entries={entries.filter((entry) => entry.contestSlug === winnersFor.slug)}
+          announced={announced.has(winnersFor.slug)}
+          ready={entriesReady}
+          onClose={closeWinners}
+        />
       ) : null}
     </div>
   );

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import { AdminDesk } from "@/components/admin-desk";
+import type { ContestEntryRow } from "@/components/admin-winners";
 import { contests as fallbackContests } from "@/lib/content";
 import { contestColumns, contestFromRow, type ContestRow } from "@/lib/get-contests";
 import {
@@ -58,6 +59,46 @@ function peopleFromRows(rows: unknown): AdminPerson[] {
   });
 }
 
+function entriesFromRows(rows: unknown): ContestEntryRow[] {
+  if (!Array.isArray(rows)) return [];
+  return rows.flatMap((row) => {
+    if (!row || typeof row !== "object") return [];
+    const record = row as Record<string, unknown>;
+    if (typeof record.id !== "string" || typeof record.contest_slug !== "string") return [];
+    const child = record.participants;
+    const related = Array.isArray(child) ? child[0] : child;
+    const profile =
+      related && typeof related === "object" ? (related as Record<string, unknown>) : null;
+    const name =
+      typeof profile?.full_name === "string" && profile.full_name.trim()
+        ? profile.full_name
+        : typeof record.participant_name === "string"
+          ? record.participant_name
+          : "Participant";
+    return [
+      {
+        id: record.id,
+        contestSlug: record.contest_slug,
+        name,
+        age: typeof profile?.age === "number" ? profile.age : null,
+        gender: profile?.gender === "boy" || profile?.gender === "girl" ? profile.gender : null,
+        instagramUrl: typeof profile?.instagram_url === "string" ? profile.instagram_url : null,
+        winner: record.is_winner === true,
+      },
+    ];
+  });
+}
+
+function announcedFromRows(rows: unknown): string[] {
+  if (!Array.isArray(rows)) return [];
+  return rows.flatMap((row) => {
+    if (!row || typeof row !== "object") return [];
+    const record = row as Record<string, unknown>;
+    if (record.results_announced === true && typeof record.slug === "string") return [record.slug];
+    return [];
+  });
+}
+
 function countsFromRow(row: unknown): AdminCounts {
   if (!row || typeof row !== "object") return emptyCounts;
   const record = row as Record<string, unknown>;
@@ -90,7 +131,7 @@ async function AdminGate({ section }: { section: string | undefined }) {
   const needsContests = current === "contests";
   const needsPeople = current === "admins" || current === "users";
   const needsCounts = current === "dashboard";
-  const [contestResult, peopleResult, countsResult] = await Promise.all([
+  const [contestResult, peopleResult, countsResult, entryResult, announcedResult] = await Promise.all([
     needsContests
       ? supabase.from("contests").select(contestColumns).order("sort_order", { ascending: true })
       : Promise.resolve(null),
@@ -100,6 +141,13 @@ async function AdminGate({ section }: { section: string | undefined }) {
         })
       : Promise.resolve(null),
     needsCounts ? supabase.rpc("admin_account_counts") : Promise.resolve(null),
+    needsContests
+      ? supabase
+          .from("entries")
+          .select("id, contest_slug, participant_name, is_winner, participants(full_name, age, gender, instagram_url)")
+          .order("created_at", { ascending: true })
+      : Promise.resolve(null),
+    needsContests ? supabase.from("contests").select("slug, results_announced") : Promise.resolve(null),
   ]);
 
   const countRow = Array.isArray(countsResult?.data) ? countsResult.data[0] : countsResult?.data;
@@ -115,6 +163,9 @@ async function AdminGate({ section }: { section: string | undefined }) {
           ? fallbackContests
           : (contestResult?.data ?? []).map((row) => contestFromRow(row as ContestRow))
       }
+      entriesReady={!entryResult?.error}
+      entries={entriesFromRows(entryResult?.data)}
+      announcedSlugs={announcedResult?.error ? [] : announcedFromRows(announcedResult?.data)}
       peopleReady={!peopleResult?.error}
       people={peopleFromRows(peopleResult?.data)}
       countsReady={!countsResult?.error}

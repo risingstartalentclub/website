@@ -112,7 +112,7 @@ export function AuthForm({
         {heading ?? (isSignup ? "Register" : "Log In")}
       </h2>
       {note ? <p className="-mt-2 font-body-md text-body-md text-on-surface-variant">{note}</p> : null}
-      {!isSignup && nextPath ? <input type="hidden" name="next" value={nextPath} /> : null}
+      {nextPath ? <input type="hidden" name="next" value={nextPath} /> : null}
       {isSignup ? (
         <>
           <label className="flex flex-col gap-1">
@@ -238,7 +238,10 @@ export function AuthForm({
                 Log In
               </button>
             ) : (
-              <Link href="/login" className="font-semibold text-secondary">
+              <Link
+                href={nextPath ? `/login?next=${encodeURIComponent(nextPath)}` : "/login"}
+                className="font-semibold text-secondary"
+              >
                 Log In
               </Link>
             )}
@@ -252,7 +255,10 @@ export function AuthForm({
                 Register here
               </button>
             ) : (
-              <Link href="/signup" className="font-bold text-primary underline decoration-2 underline-offset-4">
+              <Link
+                href={nextPath ? `/signup?next=${encodeURIComponent(nextPath)}` : "/signup"}
+                className="font-bold text-primary underline decoration-2 underline-offset-4"
+              >
                 Register here
               </Link>
             )}

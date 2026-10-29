@@ -45,9 +45,24 @@ export function pincodeError(value: string) {
   return null;
 }
 
-export function instagramError(value: string) {
+export function ageError(value: string) {
   const raw = value.trim();
-  if (!raw) return null;
+  if (!/^\d{1,2}$/.test(raw)) return "Enter an age from 0 to 21.";
+  const age = Number(raw);
+  if (age > 21) return "Enter an age from 0 to 21.";
+  return null;
+}
+
+export function genderError(value: string) {
+  if (value !== "boy" && value !== "girl") return "Choose boy or girl.";
+  return null;
+}
+
+export function instagramError(value: string, required = false) {
+  const raw = value.trim();
+  if (!raw) {
+    return required ? "Enter an Instagram profile link, like https://instagram.com/name." : null;
+  }
   try {
     const url = new URL(raw);
     const host = url.hostname.replace(/^www\./, "");

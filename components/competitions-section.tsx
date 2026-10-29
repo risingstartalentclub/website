@@ -1,15 +1,22 @@
 import Link from "next/link";
 import { contests, type Contest } from "@/lib/content";
 import { Icon } from "@/components/icon";
+import { participateHref } from "@/lib/parent-panel";
 
 export function CompetitionsSection({
   items,
   featured = false,
   signedIn = false,
+  eyebrow = "WHAT'S HAPPENING NOW",
+  heading,
+  intro,
 }: {
   items?: Contest[];
   featured?: boolean;
   signedIn?: boolean;
+  eyebrow?: string;
+  heading?: string;
+  intro?: string;
 }) {
   const source = items ?? (featured ? [] : contests);
   const shown = featured ? source.filter((contest) => contest.isHero).slice(0, 1) : source;
@@ -21,15 +28,16 @@ export function CompetitionsSection({
           <div>
             <div className="font-label-sm text-label-sm mb-space-xs inline-flex items-center gap-space-xs rounded-full border border-tertiary-fixed-dim/40 bg-tertiary-fixed/35 px-3 py-1 font-bold tracking-widest text-tertiary-container uppercase shadow-sm">
               <Icon name="stars" filled className="text-[15px] text-tertiary-container" />
-              WHAT&apos;S HAPPENING NOW
+              {eyebrow}
             </div>
             <h2 className="font-headline-xl text-headline-xl-mobile md:text-headline-xl tracking-tight text-primary">
-              {featured ? "Featured Contest" : "Discover Exciting Contests"}
+              {heading ?? (featured ? "Featured Contest" : "Discover Exciting Contests")}
             </h2>
             <p className="font-body-md text-body-md mt-1 max-w-2xl text-on-surface-variant">
-              {featured
-                ? "The contest chosen for the homepage is the one families can enter from here."
-                : "From festive celebrations to creative challenges, find your moment to shine with Rising Star Talent Club."}
+              {intro ??
+                (featured
+                  ? "The contest chosen for the homepage is the one families can enter from here."
+                  : "From festive celebrations to creative challenges, find your moment to shine with Rising Star Talent Club.")}
             </p>
           </div>
           {featured ? (
@@ -146,7 +154,7 @@ export function CompetitionsSection({
                   <div>
                     {contest.status === "closed" ? null : (
                       <Link
-                        href={signedIn ? "/profile" : "/login"}
+                        href={participateHref(contest.slug, signedIn)}
                         className="font-label-md text-label-md group flex items-center justify-center gap-1.5 rounded-lg bg-primary-container px-space-sm py-3 text-center font-bold text-on-primary shadow-md transition-colors hover:bg-secondary"
                       >
                         <span>Participate Now</span>

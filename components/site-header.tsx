@@ -97,8 +97,8 @@ export function SiteHeader({
         <div className="ml-auto flex shrink-0 items-center gap-2">
           {signedIn ? (
             <Link
-              href="/profile"
-              aria-label="Your account"
+              href="/parent-panel"
+              aria-label="Parent panel"
               className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-container text-on-primary"
             >
               <span className="material-symbols-outlined text-[18px]">person</span>
@@ -143,8 +143,8 @@ export function SiteHeader({
               </Link>
             ))}
             {signedIn ? (
-              <Link href="/profile" className="font-label-lg text-label-lg text-primary">
-                Your account
+              <Link href="/parent-panel" className="font-label-lg text-label-lg text-primary">
+                Parent panel
               </Link>
             ) : (
               <Link href="/login" className="font-label-lg text-label-lg text-primary">

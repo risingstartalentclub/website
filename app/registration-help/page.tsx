@@ -9,10 +9,10 @@ export default function RegistrationHelpPage() {
     <SiteFrame>
       <InfoPage eyebrow="Participant Support" title="Registration Help">
         <p>
-          Open a contest and choose Participate Now, then confirm the
-          participant name and email. A parent or guardian registers and stays
-          responsible for anyone under 18. If you are logged in, the entry is
-          saved on your profile. Submission instructions for photos, videos, or
+          Open a contest and choose Participate Now, then add the child&apos;s
+          certificate name, age, boy or girl, and Instagram profile. A parent
+          or guardian can enter more than one child. If you are logged in, the
+          entry is saved in your parent panel. Submission instructions for photos, videos, or
           artwork are sent by email.
         </p>
       </InfoPage>

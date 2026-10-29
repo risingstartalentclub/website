@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { adminPath, isAdminDestination } from "@/lib/admin-path";
+import { parentPanelPath } from "@/lib/parent-panel";
 import { safeNextPath } from "@/lib/safe-next";
 import { isSupabaseConfigured, supabaseSetupMessage } from "@/lib/supabase/env";
 import { limitLogin, limitSignup } from "@/lib/public-limits";
@@ -62,7 +63,9 @@ export async function signUp(
     }
   }
 
-  redirect("/profile");
+  const nextPath = safeNextPath(String(formData.get("next") ?? ""));
+  if (nextPath && !isAdminDestination(nextPath)) redirect(nextPath);
+  redirect(parentPanelPath);
 }
 
 async function authenticate(formData: FormData, scope: "public" | "admin" = "public") {
@@ -119,7 +122,7 @@ export async function signIn(
     return { error: "This account cannot open that page." };
   }
   if (result.nextPath) redirect(result.nextPath);
-  redirect("/profile");
+  redirect(parentPanelPath);
 }
 
 export async function signInAdmin(

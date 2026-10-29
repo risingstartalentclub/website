@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import Link, { useLinkStatus } from "next/link";
 import { AdminContests } from "@/components/admin-contests";
+import type { ContestEntryRow } from "@/components/admin-winners";
 import { AdminDashboard } from "@/components/admin-dashboard";
 import { AdminPeople } from "@/components/admin-people";
 import { BusyScreen } from "@/components/busy-screen";
@@ -116,6 +117,9 @@ export function AdminDesk({
   viewerName,
   contests,
   contestsReady,
+  entries,
+  entriesReady,
+  announcedSlugs,
   people,
   peopleReady,
   counts,
@@ -126,6 +130,9 @@ export function AdminDesk({
   viewerName: string | null;
   contests: Contest[];
   contestsReady: boolean;
+  entries: ContestEntryRow[];
+  entriesReady: boolean;
+  announcedSlugs: string[];
   people: AdminPerson[];
   peopleReady: boolean;
   counts: AdminCounts;
@@ -212,7 +219,15 @@ export function AdminDesk({
           {section === "dashboard" ? (
             <AdminDashboard counts={counts} ready={countsReady} name={viewerName} />
           ) : null}
-          {section === "contests" ? <AdminContests contests={contests} ready={contestsReady} /> : null}
+          {section === "contests" ? (
+            <AdminContests
+              contests={contests}
+              ready={contestsReady}
+              entries={entries}
+              entriesReady={entriesReady}
+              announcedSlugs={announcedSlugs}
+            />
+          ) : null}
           {section === "admins" ? (
             <AdminPeople people={people} ready={peopleReady} emptyLabel="No admin accounts yet." kind="admin" />
           ) : null}
