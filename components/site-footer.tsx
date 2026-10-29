@@ -2,6 +2,8 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { getSiteImages } from "@/lib/get-site-images";
 import { Icon } from "@/components/icon";
+import { SocialIcons } from "@/components/social-links";
+import { legalLinks } from "@/lib/legal";
 
 const columns = [
   {
@@ -25,12 +27,7 @@ const columns = [
   },
   {
     title: "Legal & Compliance",
-    links: [
-      { href: "/terms", label: "Terms and Conditions" },
-      { href: "/privacy", label: "Privacy Policy" },
-      { href: "/rules", label: "Competition Rules" },
-      { href: "/refund", label: "Refund & Cancellation Policy" },
-    ],
+    links: legalLinks.map((link) => ({ href: link.href, label: link.label })),
   },
 ];
 
@@ -75,6 +72,7 @@ function FooterView({ logo }: { logo: string }) {
               creativity, culture, and achievements of babies, kids, teens, and
               youth.
             </p>
+            <SocialIcons />
           </div>
 
           {columns.map((column, index) => (

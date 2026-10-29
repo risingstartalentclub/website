@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { Icon } from "@/components/icon";
+import { SocialButtons } from "@/components/social-links";
 import type { Contest } from "@/lib/content";
 import { getContests } from "@/lib/get-contests";
 import { getSiteImages } from "@/lib/get-site-images";
@@ -60,7 +61,7 @@ function HeroView({ contest }: { contest: Contest | null }) {
               Rising Star Talent Club gives every young star an opportunity to
               participate, express themselves, and shine.
             </p>
-            <div className="flex flex-col items-stretch gap-space-md pt-space-xs sm:flex-row sm:items-center">
+            <div className="flex flex-col items-stretch gap-space-md pt-space-xs sm:flex-row sm:flex-wrap sm:items-center">
               <a
                 className="font-label-lg text-label-lg group inline-flex items-center justify-center gap-space-sm rounded-lg bg-primary-container px-space-xl py-4 text-on-primary shadow-md transition-all hover:bg-secondary"
                 href="#competitions"
@@ -71,15 +72,7 @@ function HeroView({ contest }: { contest: Contest | null }) {
                   className="text-[18px] transition-transform group-hover:translate-x-1"
                 />
               </a>
-              <a
-                className="font-label-lg text-label-lg inline-flex items-center justify-center gap-space-sm rounded-lg bg-surface-container-lowest px-space-lg py-4 text-primary shadow-sm transition-colors hover:bg-surface-container"
-                href="https://www.instagram.com/risingstartalentclub"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Icon name="how_to_reg" className="text-[20px] text-secondary" />
-                <span>Join the Club</span>
-              </a>
+              <SocialButtons />
             </div>
             <div className="flex items-center gap-space-sm pt-space-xs text-on-surface-variant">
               <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-tertiary-fixed text-on-tertiary-fixed">
