@@ -64,7 +64,7 @@ export function CompetitionsSection({
           {shown.length === 0 ? (
             featured ? (
               <article className="overflow-hidden rounded-xl border border-dashed border-outline-variant/80 bg-surface-container-lowest shadow-sm">
-                <div className="flex aspect-[16/10] items-center justify-center bg-surface-container">
+                <div className="flex aspect-square items-center justify-center bg-surface-container">
                   <div className="flex h-16 w-16 items-center justify-center rounded-full bg-tertiary-fixed text-on-tertiary-fixed">
                     <Icon name="emoji_events" className="text-[32px]" />
                   </div>
@@ -92,7 +92,7 @@ export function CompetitionsSection({
                 key={contest.slug}
                 className="group flex flex-col overflow-hidden rounded-xl border border-surface-variant/60 bg-surface-container-lowest shadow-md transition-all duration-300 hover:shadow-xl"
               >
-                <div className="relative aspect-[16/10] overflow-hidden bg-surface-container">
+                <div className="relative aspect-square overflow-hidden bg-surface-container">
                   {contest.image ? (
                     <img
                       src={contest.image}

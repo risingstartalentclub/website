@@ -14,6 +14,26 @@ const fieldClass =
 
 const imageTypes = ["image/jpeg", "image/png", "image/webp"];
 const maxImageBytes = 5 * 1024 * 1024;
+const bannerSize = 512;
+
+async function squareBanner(file: File) {
+  const bitmap = await createImageBitmap(file);
+  const side = Math.min(bitmap.width, bitmap.height);
+  const canvas = document.createElement("canvas");
+  canvas.width = bannerSize;
+  canvas.height = bannerSize;
+  const context = canvas.getContext("2d");
+  if (!context) {
+    bitmap.close();
+    throw new Error("canvas");
+  }
+  context.drawImage(bitmap, (bitmap.width - side) / 2, (bitmap.height - side) / 2, side, side, 0, 0, bannerSize, bannerSize);
+  bitmap.close();
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, file.type, 0.92));
+  if (!blob) throw new Error("blob");
+  const extension = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+  return new File([blob], `banner.${extension}`, { type: file.type });
+}
 
 function formatDate(value?: string) {
   if (!value) return "—";
@@ -73,22 +93,27 @@ function ContestEditor({ contest, onClose }: { contest: Contest | null; onClose:
     };
   }, [pickedUrl]);
 
-  function takeImage(file: File | undefined) {
+  async function takeImage(file: File | undefined) {
     if (!file) return;
     if (!imageTypes.includes(file.type) || file.size > maxImageBytes) {
       setImageError("Use a JPG, PNG, or WebP image up to 5 MB.");
       return;
     }
-    setImageError("");
-    if (fileRef.current) {
-      const data = new DataTransfer();
-      data.items.add(file);
-      fileRef.current.files = data.files;
+    try {
+      const square = await squareBanner(file);
+      setImageError("");
+      if (fileRef.current) {
+        const data = new DataTransfer();
+        data.items.add(square);
+        fileRef.current.files = data.files;
+      }
+      setPickedUrl((previous) => {
+        if (previous) URL.revokeObjectURL(previous);
+        return URL.createObjectURL(square);
+      });
+    } catch {
+      setImageError("That image could not be prepared. Use a JPG, PNG, or WebP.");
     }
-    setPickedUrl((previous) => {
-      if (previous) URL.revokeObjectURL(previous);
-      return URL.createObjectURL(file);
-    });
   }
 
   return (
@@ -137,32 +162,37 @@ function ContestEditor({ contest, onClose }: { contest: Contest | null; onClose:
 
         <section className="flex flex-col gap-2">
           <p className="font-label-sm text-label-sm font-bold tracking-wide text-primary uppercase">Banner</p>
-          <div
-            className={`relative overflow-hidden rounded-xl border-2 border-dashed ${
-              dragging ? "border-secondary bg-secondary-fixed/50" : "border-surface-variant bg-surface"
-            }`}
-            onDragOver={(event) => {
-              event.preventDefault();
-              setDragging(true);
-            }}
-            onDragLeave={() => setDragging(false)}
-            onDrop={(event) => {
-              event.preventDefault();
-              setDragging(false);
-              takeImage(event.dataTransfer.files?.[0]);
-            }}
-          >
-            {preview ? (
-              <img src={preview} alt="" className="h-52 w-full object-cover" />
-            ) : (
-              <div className="flex h-52 flex-col items-center justify-center px-6 text-center">
-                <p className="font-body-md text-body-md text-primary">Drop the banner here</p>
-                <p className="font-body-sm text-body-sm mt-1 text-on-surface-variant">or choose a file. JPG, PNG, or WebP, up to 5 MB.</p>
-              </div>
-            )}
-            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-surface-variant bg-surface-container-lowest px-3 py-2">
+          <p className="font-body-sm text-body-sm text-on-surface-variant">
+            The contest card shows this as a 512 × 512 square. A wider photo is centered and cropped to fit.
+          </p>
+          <div className="mx-auto w-full max-w-[512px]">
+            <div
+              className={`relative aspect-square overflow-hidden rounded-xl border-2 border-dashed ${
+                dragging ? "border-secondary bg-secondary-fixed/50" : "border-surface-variant bg-surface"
+              }`}
+              onDragOver={(event) => {
+                event.preventDefault();
+                setDragging(true);
+              }}
+              onDragLeave={() => setDragging(false)}
+              onDrop={(event) => {
+                event.preventDefault();
+                setDragging(false);
+                void takeImage(event.dataTransfer.files?.[0]);
+              }}
+            >
+              {preview ? (
+                <img src={preview} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full flex-col items-center justify-center px-6 text-center">
+                  <p className="font-body-md text-body-md text-primary">Drop a square banner here</p>
+                  <p className="font-body-sm text-body-sm mt-1 text-on-surface-variant">512 × 512. JPG, PNG, or WebP, up to 5 MB.</p>
+                </div>
+              )}
+            </div>
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
               <p className="font-body-sm text-body-sm text-on-surface-variant">
-                {preview ? "Drop a new image here, or choose another file." : "No image selected yet."}
+                {preview ? "This is the 512 × 512 square families will see." : "No image selected yet."}
               </p>
               <button
                 type="button"
@@ -386,7 +416,7 @@ export function AdminContests({
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       {contest.image ? (
-                        <img src={contest.image} alt="" className="h-10 w-14 shrink-0 rounded-md object-cover bg-surface" />
+                        <img src={contest.image} alt="" className="h-10 w-10 shrink-0 rounded-md object-cover bg-surface" />
                       ) : null}
                       <Link
                         href={contestHref(contest.slug)}
