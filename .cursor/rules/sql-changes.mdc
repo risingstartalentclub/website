@@ -1,0 +1,15 @@
+---
+description: Database changes go in a new numbered SQL file. Do not edit existing SQL scripts.
+alwaysApply: true
+---
+
+# SQL changes
+
+When a database change is needed, add a new file under `supabase/`. Do not edit an existing SQL file.
+
+- Name it with the next number, such as `supabase/7-short-name.sql`.
+- The file must be safe to run once on a database that already has the earlier scripts applied.
+- Use `create or replace`, `drop policy if exists`, and `add column if not exists` so running it again is safe.
+- Put a short header in the file that says which previous script must already have been run.
+- Leave `supabase/1-schema.sql` and every earlier numbered script unchanged.
+- App code may change when the new rule needs a matching message or query. The SQL itself stays in the new file.

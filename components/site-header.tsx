@@ -8,9 +8,11 @@ import { navLinks } from "@/lib/content";
 export function SiteHeader({
   logo,
   signedIn,
+  pending = false,
 }: {
   logo: string;
   signedIn: boolean;
+  pending?: boolean;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -95,7 +97,9 @@ export function SiteHeader({
         </nav>
 
         <div className="ml-auto flex shrink-0 items-center gap-2">
-          {signedIn ? (
+          {pending ? (
+            <span className="inline-block h-8 w-8 rounded-full bg-surface-container" aria-hidden />
+          ) : signedIn ? (
             <Link
               href="/parent-panel"
               aria-label="Parent panel"
@@ -142,7 +146,7 @@ export function SiteHeader({
                 {link.label}
               </Link>
             ))}
-            {signedIn ? (
+            {pending ? null : signedIn ? (
               <Link href="/parent-panel" className="font-label-lg text-label-lg text-primary">
                 Parent panel
               </Link>

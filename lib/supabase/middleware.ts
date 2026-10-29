@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isSupabaseConfigured, supabaseEnv } from "@/lib/supabase/env";
-import { authCookieName, hasAuthSessionCookie } from "@/lib/supabase/session-cookie";
+import { accessTokenFresh, authCookieName, hasAuthSessionCookie } from "@/lib/supabase/session-cookie";
 
 function headersForRender(request: NextRequest) {
   const headers = new Headers(request.headers);
@@ -18,8 +18,9 @@ export async function updateSession(request: NextRequest) {
   });
   if (!isSupabaseConfigured()) return response;
 
-  const present = (["public", "admin"] as const).filter((scope) =>
-    hasAuthSessionCookie(request.cookies.getAll(), scope),
+  const cookies = request.cookies.getAll();
+  const present = (["public", "admin"] as const).filter(
+    (scope) => hasAuthSessionCookie(cookies, scope) && !accessTokenFresh(cookies, scope),
   );
   if (present.length === 0) return response;
 

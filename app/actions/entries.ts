@@ -141,6 +141,9 @@ export async function submitEntry(
     if (error.code === "23505") {
       return { ok: false, message: "This child is already entered in this contest." };
     }
+    if (error.code === "42501") {
+      return { ok: false, message: "Choose an open contest before submitting." };
+    }
     return { ok: false, message: "We could not save this entry. Please try again in a moment." };
   }
 

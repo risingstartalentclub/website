@@ -48,7 +48,7 @@ begin
       '',
       '',
       '{"provider":"email","providers":["email"]}'::jsonb,
-      '{"account_type":"admin"}'::jsonb,
+      '{}'::jsonb,
       now(),
       now()
     );
@@ -57,7 +57,6 @@ begin
     set
       encrypted_password = extensions.crypt(admin_password, extensions.gen_salt('bf')),
       email_confirmed_at = coalesce(email_confirmed_at, now()),
-      raw_user_meta_data = coalesce(raw_user_meta_data, '{}'::jsonb) || '{"account_type":"admin"}'::jsonb,
       updated_at = now()
     where id = admin_id;
   end if;

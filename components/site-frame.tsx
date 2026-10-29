@@ -1,22 +1,23 @@
+import { cookies } from "next/headers";
 import { Suspense } from "react";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getSiteImages } from "@/lib/get-site-images";
-import { getViewer } from "@/lib/viewer";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { hasAuthSessionCookie } from "@/lib/supabase/session-cookie";
 
 async function LiveHeader() {
-  const [viewer, images] = await Promise.all([getViewer("public"), getSiteImages()]);
-  return (
-    <SiteHeader logo={images.logo} signedIn={viewer.signedIn} />
-  );
+  const cookieStore = await cookies();
+  const signedIn =
+    isSupabaseConfigured() && hasAuthSessionCookie(cookieStore.getAll(), "public");
+  const images = await getSiteImages();
+  return <SiteHeader logo={images.logo} signedIn={signedIn} />;
 }
 
 export function SiteFrame({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-dvh flex-col">
-      <Suspense
-        fallback={<SiteHeader logo="" signedIn={false} />}
-      >
+      <Suspense fallback={<SiteHeader logo="" signedIn={false} pending />}>
         <LiveHeader />
       </Suspense>
       <main className="w-full flex-1 bg-surface pt-16">{children}</main>

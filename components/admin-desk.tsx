@@ -1,12 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState, type ReactNode } from "react";
-import Link, { useLinkStatus } from "next/link";
+import { type ReactNode } from "react";
+import Link from "next/link";
 import { AdminContests } from "@/components/admin-contests";
 import type { ContestEntryRow } from "@/components/admin-winners";
 import { AdminDashboard } from "@/components/admin-dashboard";
 import { AdminPeople } from "@/components/admin-people";
-import { BusyScreen } from "@/components/busy-screen";
 import { LogoutButton } from "@/components/logout-button";
 import {
   adminPath,
@@ -35,16 +34,6 @@ const sectionCopy: Record<AdminSectionId, { title: string; body: string }> = {
     body: "Parents who created an account on the website.",
   },
 };
-
-function NavPending({ onPending }: { onPending: (pending: boolean) => void }) {
-  const { pending } = useLinkStatus();
-
-  useEffect(() => {
-    onPending(pending);
-  }, [onPending, pending]);
-
-  return null;
-}
 
 function MenuIcon({
   name,
@@ -120,6 +109,7 @@ export function AdminDesk({
   entries,
   entriesReady,
   announcedSlugs,
+  contestSlug,
   people,
   peopleReady,
   counts,
@@ -133,17 +123,17 @@ export function AdminDesk({
   entries: ContestEntryRow[];
   entriesReady: boolean;
   announcedSlugs: string[];
+  contestSlug?: string | null;
   people: AdminPerson[];
   peopleReady: boolean;
   counts: AdminCounts;
   countsReady: boolean;
 }) {
   const copy = sectionCopy[section];
-  const [menuLoading, setMenuLoading] = useState(false);
-  const onMenuPending = useCallback((pending: boolean) => {
-    setMenuLoading(pending);
-  }, []);
-
+  const openedContest =
+    section === "contests" && contestSlug ? contests.find((contest) => contest.slug === contestSlug) : undefined;
+  const title = openedContest?.title ?? copy.title;
+  const body = openedContest ? "Participants in this contest. Choose who won." : copy.body;
   return (
     <div className="min-h-dvh bg-surface md:pl-64">
       <aside className="fixed inset-y-0 left-0 z-40 hidden h-dvh w-64 flex-col overflow-hidden bg-primary-container text-on-primary md:flex">
@@ -168,12 +158,12 @@ export function AdminDesk({
             <Link
               key={item.id}
               href={`${adminPath}?section=${item.id}`}
+              prefetch
               aria-current={section === item.id ? "page" : undefined}
               className={navClass(section === item.id)}
             >
               <MenuIcon name={item.id} />
               <span className="truncate">{item.label}</span>
-              <NavPending onPending={onMenuPending} />
             </Link>
           ))}
         </nav>
@@ -194,6 +184,7 @@ export function AdminDesk({
             <Link
               key={item.id}
               href={`${adminPath}?section=${item.id}`}
+              prefetch
               aria-current={section === item.id ? "page" : undefined}
               className={
                 section === item.id
@@ -203,7 +194,6 @@ export function AdminDesk({
             >
               <MenuIcon name={item.id} className="h-4 w-4" />
               <span>{item.label}</span>
-              <NavPending onPending={onMenuPending} />
             </Link>
           ))}
           <LogoutButton scope="admin" className="font-label-md text-label-md shrink-0 px-3 py-2 text-secondary">
@@ -213,8 +203,8 @@ export function AdminDesk({
 
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-space-md px-4 py-6 sm:px-6">
           <div>
-            <h1 className="font-headline-xl text-headline-xl-mobile text-primary md:text-headline-xl">{copy.title}</h1>
-            <p className="font-body-md text-body-md mt-space-sm text-on-surface-variant">{copy.body}</p>
+            <h1 className="font-headline-xl text-headline-xl-mobile text-primary md:text-headline-xl">{title}</h1>
+            <p className="font-body-md text-body-md mt-space-sm text-on-surface-variant">{body}</p>
           </div>
           {section === "dashboard" ? (
             <AdminDashboard counts={counts} ready={countsReady} name={viewerName} />
@@ -226,6 +216,7 @@ export function AdminDesk({
               entries={entries}
               entriesReady={entriesReady}
               announcedSlugs={announcedSlugs}
+              contestSlug={contestSlug}
             />
           ) : null}
           {section === "admins" ? (
@@ -236,7 +227,6 @@ export function AdminDesk({
           ) : null}
         </div>
       </div>
-      {menuLoading ? <BusyScreen label="Loading..." /> : null}
     </div>
   );
 }

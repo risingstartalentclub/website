@@ -150,20 +150,8 @@ as $$
 declare
   account_type text := coalesce(new.raw_user_meta_data ->> 'account_type', '');
 begin
-  if account_type = 'admin' then
-    insert into public.admins (id, email, full_name)
-    values (
-      new.id,
-      new.email,
-      nullif(btrim(coalesce(new.raw_user_meta_data ->> 'full_name', '')), '')
-    )
-    on conflict (id) do update
-    set
-      email = excluded.email,
-      full_name = coalesce(excluded.full_name, public.admins.full_name);
-    return new;
-  end if;
-
+  -- Signup metadata is chosen by the caller. Never create an admin from it.
+  -- Admin rows are inserted by admin_create_admin and supabase/2-make-admin.sql.
   if account_type = 'parent' then
     insert into public.parents (id, full_name, email, mobile)
     values (
@@ -261,7 +249,8 @@ begin
 end;
 $$;
 
--- Lets a signed-in admin create another admin who can log in immediately.
+-- Called by the admin server action. The signed-in user must already be an admin.
+-- This insert is what creates the admin row. The signup trigger does not.
 create extension if not exists pgcrypto with schema extensions;
 
 create or replace function public.admin_create_admin(
@@ -342,7 +331,7 @@ begin
     '',
     '',
     '{"provider":"email","providers":["email"]}'::jsonb,
-    jsonb_build_object('account_type', 'admin', 'full_name', clean_name),
+    jsonb_build_object('full_name', clean_name),
     now(),
     now()
   );
@@ -373,16 +362,8 @@ begin
       and provider = 'email'
   );
 
-  update public.admins
-  set
-    email = clean_email,
-    full_name = clean_name
-  where id = new_id;
-
-  if not found then
-    insert into public.admins (id, email, full_name)
-    values (new_id, clean_email, clean_name);
-  end if;
+  insert into public.admins (id, email, full_name)
+  values (new_id, clean_email, clean_name);
 
   return new_id;
 exception

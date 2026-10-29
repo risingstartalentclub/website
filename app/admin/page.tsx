@@ -112,7 +112,18 @@ function countsFromRow(row: unknown): AdminCounts {
   };
 }
 
-async function AdminGate({ section }: { section: string | undefined }) {
+function contestQuery(value: string | undefined) {
+  if (!value || !/^[a-z0-9-]{1,80}$/i.test(value)) return null;
+  return value;
+}
+
+async function AdminGate({
+  section,
+  contest,
+}: {
+  section: string | undefined;
+  contest: string | undefined;
+}) {
   if (!isSupabaseConfigured()) {
     return (
       <div className="flex h-dvh items-center justify-center bg-surface px-4">
@@ -121,34 +132,37 @@ async function AdminGate({ section }: { section: string | undefined }) {
     );
   }
 
-  const viewer = await getViewer("admin");
-  if (!viewer.signedIn) redirect("/admin/login");
-  if (!viewer.isAdmin) notFound();
-
   const current = adminSection(section);
-  const supabase = await createClient("admin");
-  const images = await getSiteImages();
   const needsContests = current === "contests";
   const needsPeople = current === "admins" || current === "users";
   const needsCounts = current === "dashboard";
-  const [contestResult, peopleResult, countsResult, entryResult, announcedResult] = await Promise.all([
-    needsContests
-      ? supabase.from("contests").select(contestColumns).order("sort_order", { ascending: true })
-      : Promise.resolve(null),
-    needsPeople
-      ? supabase.rpc("admin_list_profiles", {
-          requested_role: current === "admins" ? "admin" : "parent",
-        })
-      : Promise.resolve(null),
-    needsCounts ? supabase.rpc("admin_account_counts") : Promise.resolve(null),
-    needsContests
-      ? supabase
-          .from("entries")
-          .select("id, contest_slug, participant_name, is_winner, participants(full_name, age, gender, instagram_url)")
-          .order("created_at", { ascending: true })
-      : Promise.resolve(null),
-    needsContests ? supabase.from("contests").select("slug, results_announced") : Promise.resolve(null),
-  ]);
+  const supabase = await createClient("admin");
+  const [viewer, images, contestResult, peopleResult, countsResult, entryResult, announcedResult] =
+    await Promise.all([
+      getViewer("admin"),
+      getSiteImages(),
+      needsContests
+        ? supabase.from("contests").select(contestColumns).order("sort_order", { ascending: true })
+        : Promise.resolve(null),
+      needsPeople
+        ? supabase.rpc("admin_list_profiles", {
+            requested_role: current === "admins" ? "admin" : "parent",
+          })
+        : Promise.resolve(null),
+      needsCounts ? supabase.rpc("admin_account_counts") : Promise.resolve(null),
+      needsContests
+        ? supabase
+            .from("entries")
+            .select(
+              "id, contest_slug, participant_name, is_winner, participants(full_name, age, gender, instagram_url)",
+            )
+            .order("created_at", { ascending: true })
+        : Promise.resolve(null),
+      needsContests ? supabase.from("contests").select("slug, results_announced") : Promise.resolve(null),
+    ]);
+
+  if (!viewer.signedIn) redirect("/admin/login");
+  if (!viewer.isAdmin) notFound();
 
   const countRow = Array.isArray(countsResult?.data) ? countsResult.data[0] : countsResult?.data;
 
@@ -166,6 +180,7 @@ async function AdminGate({ section }: { section: string | undefined }) {
       entriesReady={!entryResult?.error}
       entries={entriesFromRows(entryResult?.data)}
       announcedSlugs={announcedResult?.error ? [] : announcedFromRows(announcedResult?.data)}
+      contestSlug={current === "contests" ? contestQuery(contest) : null}
       peopleReady={!peopleResult?.error}
       people={peopleFromRows(peopleResult?.data)}
       countsReady={!countsResult?.error}
@@ -197,7 +212,7 @@ function DeskFrame() {
 export default function AdminPage({
   searchParams,
 }: {
-  searchParams: Promise<{ section?: string }>;
+  searchParams: Promise<{ section?: string; contest?: string }>;
 }) {
   return (
     <Suspense fallback={<DeskFrame />}>
@@ -209,8 +224,8 @@ export default function AdminPage({
 async function AdminLoader({
   searchParams,
 }: {
-  searchParams: Promise<{ section?: string }>;
+  searchParams: Promise<{ section?: string; contest?: string }>;
 }) {
-  const { section } = await searchParams;
-  return <AdminGate section={section} />;
+  const { section, contest } = await searchParams;
+  return <AdminGate section={section} contest={contest} />;
 }

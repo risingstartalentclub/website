@@ -1,9 +1,12 @@
 "use client";
 
 import { useActionState, useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { deleteContest, saveContest, type ContestState } from "@/app/actions/contests";
-import { WinnerPicker, type ContestEntryRow } from "@/components/admin-winners";
+import { ContestParticipants, type ContestEntryRow } from "@/components/admin-winners";
 import { Icon } from "@/components/icon";
+import { adminPath } from "@/lib/admin-path";
 import type { Contest } from "@/lib/content";
 
 const fieldClass =
@@ -241,24 +244,80 @@ function ContestEditor({ contest, onClose }: { contest: Contest | null; onClose:
 
 const columns = ["Name", "Age range", "Entry fee", "Start", "End", "Result", "Status", "Homepage", ""];
 
+function contestHref(slug: string) {
+  return `${adminPath}?section=contests&contest=${encodeURIComponent(slug)}`;
+}
+
 export function AdminContests({
   contests,
   ready,
   entries,
   entriesReady,
   announcedSlugs,
+  contestSlug,
 }: {
   contests: Contest[];
   ready: boolean;
   entries: ContestEntryRow[];
   entriesReady: boolean;
   announcedSlugs: string[];
+  contestSlug?: string | null;
 }) {
+  const router = useRouter();
   const [editor, setEditor] = useState<Contest | "new" | null>(null);
-  const [winnersFor, setWinnersFor] = useState<Contest | null>(null);
   const closeEditor = useCallback(() => setEditor(null), []);
-  const closeWinners = useCallback(() => setWinnersFor(null), []);
   const announced = new Set(announcedSlugs);
+  const opened = contestSlug ? contests.find((contest) => contest.slug === contestSlug) ?? null : null;
+
+  if (contestSlug) {
+    const participants = entries.filter((entry) => entry.contestSlug === contestSlug);
+    return (
+      <div className="flex flex-col gap-4">
+        <Link href={`${adminPath}?section=contests`} className="font-label-md text-label-md w-fit font-semibold text-secondary">
+          Back to contests
+        </Link>
+        {!opened ? (
+          <div className="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
+            <p className="font-headline-sm text-headline-sm text-primary">Contest not found</p>
+            <p className="font-body-sm text-body-sm mt-1 text-on-surface-variant">
+              This contest is not in the list. Go back and choose another one.
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-surface-container-lowest p-5 shadow-sm">
+              <div>
+                <p className="font-label-sm text-label-sm text-secondary">{opened.ageRange || opened.categoryLabel || "Contest"}</p>
+                <p className="font-body-sm text-body-sm mt-1 text-on-surface-variant">
+                  {formatDate(opened.startDate)} – {formatDate(opened.endDate)} · Result {formatDate(opened.resultDate)} · {opened.fee || "Free Entry"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditor(opened)}
+                className="font-label-md text-label-md rounded-lg bg-surface-container px-3 py-2 font-semibold text-primary"
+              >
+                Edit contest
+              </button>
+            </div>
+            <div>
+              <h2 className="font-headline-md text-headline-md text-primary">Participants</h2>
+              <p className="font-body-sm text-body-sm mt-1 text-on-surface-variant">
+                {participants.length === 1 ? "1 entry" : `${participants.length} entries`}
+              </p>
+            </div>
+            <ContestParticipants
+              contestSlug={opened.slug}
+              entries={participants}
+              announced={announced.has(opened.slug)}
+              ready={entriesReady}
+            />
+          </>
+        )}
+        {editor && editor !== "new" ? <ContestEditor key={editor.slug} contest={editor} onClose={closeEditor} /> : null}
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -300,13 +359,23 @@ export function AdminContests({
             </thead>
             <tbody>
               {contests.map((contest) => (
-                <tr key={contest.slug} className="border-t border-surface-variant/70">
+                <tr
+                  key={contest.slug}
+                  className="cursor-pointer border-t border-surface-variant/70 hover:bg-surface-container-low"
+                  onClick={() => router.push(contestHref(contest.slug))}
+                >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       {contest.image ? (
                         <img src={contest.image} alt="" className="h-10 w-14 shrink-0 rounded-md object-cover bg-surface" />
                       ) : null}
-                      <span className="font-body-md text-body-md font-semibold text-primary">{contest.title}</span>
+                      <Link
+                        href={contestHref(contest.slug)}
+                        onClick={(event) => event.stopPropagation()}
+                        className="font-body-md text-body-md font-semibold text-primary"
+                      >
+                        {contest.title}
+                      </Link>
                     </div>
                   </td>
                   <td className="font-body-sm text-body-sm px-4 py-3 text-on-surface">{contest.ageRange || contest.categoryLabel || "—"}</td>
@@ -326,23 +395,14 @@ export function AdminContests({
                     </span>
                   </td>
                   <td className="font-body-sm text-body-sm px-4 py-3 text-on-surface">{contest.isHero ? "Yes" : "—"}</td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex justify-end gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setWinnersFor(contest)}
-                        className="font-label-md text-label-md rounded-lg bg-tertiary-fixed px-3 py-2 font-semibold text-on-tertiary-fixed"
-                      >
-                        {announced.has(contest.slug) ? "Winners" : "Choose winner"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setEditor(contest)}
-                        className="font-label-md text-label-md rounded-lg bg-surface-container px-3 py-2 font-semibold text-primary"
-                      >
-                        Edit
-                      </button>
-                    </div>
+                  <td className="px-4 py-3 text-right" onClick={(event) => event.stopPropagation()}>
+                    <button
+                      type="button"
+                      onClick={() => setEditor(contest)}
+                      className="font-label-md text-label-md rounded-lg bg-surface-container px-3 py-2 font-semibold text-primary"
+                    >
+                      Edit
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -352,17 +412,6 @@ export function AdminContests({
       )}
       {editor ? (
         <ContestEditor key={editor === "new" ? "new" : editor.slug} contest={editor === "new" ? null : editor} onClose={closeEditor} />
-      ) : null}
-      {winnersFor ? (
-        <WinnerPicker
-          key={winnersFor.slug}
-          contestTitle={winnersFor.title}
-          contestSlug={winnersFor.slug}
-          entries={entries.filter((entry) => entry.contestSlug === winnersFor.slug)}
-          announced={announced.has(winnersFor.slug)}
-          ready={entriesReady}
-          onClose={closeWinners}
-        />
       ) : null}
     </div>
   );

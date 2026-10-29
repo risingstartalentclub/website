@@ -1,10 +1,12 @@
+import { cookies } from "next/headers";
 import { Suspense } from "react";
 import { CompetitionsSection } from "@/components/competitions-section";
 import { contests } from "@/lib/content";
 import { getContests } from "@/lib/get-contests";
 import { getSiteImages } from "@/lib/get-site-images";
 import { applyContestImages } from "@/lib/site-images";
-import { getViewer } from "@/lib/viewer";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { hasAuthSessionCookie } from "@/lib/supabase/session-cookie";
 
 export function CompetitionsLive({ featured = false }: { featured?: boolean }) {
   const preview = featured ? [] : contests;
@@ -23,17 +25,16 @@ export function CompetitionsLive({ featured = false }: { featured?: boolean }) {
 }
 
 async function LiveCompetitions({ featured }: { featured: boolean }) {
-  const [images, items, viewer] = await Promise.all([
-    getSiteImages(),
-    getContests(!featured),
-    getViewer("public"),
-  ]);
+  const cookieStore = await cookies();
+  const signedIn =
+    isSupabaseConfigured() && hasAuthSessionCookie(cookieStore.getAll(), "public");
+  const [images, items] = await Promise.all([getSiteImages(), getContests(!featured)]);
   const ready = applyContestImages(items, images);
   return (
     <CompetitionsSection
       items={featured ? ready.filter((contest) => contest.isHero).slice(0, 1) : ready}
       featured={featured}
-      signedIn={viewer.signedIn}
+      signedIn={signedIn}
     />
   );
 }
