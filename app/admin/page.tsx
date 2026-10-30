@@ -30,17 +30,20 @@ const emptyCounts: AdminCounts = {
   heroTitle: null,
 };
 
-function joinedLabel(value: string) {
+function joinedLabel(value: string, withTime = false) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "—";
   return new Intl.DateTimeFormat("en-IN", {
     day: "numeric",
     month: "short",
     year: "numeric",
+    ...(withTime
+      ? { hour: "numeric", minute: "2-digit", hour12: true, timeZone: "Asia/Kolkata" }
+      : {}),
   }).format(date);
 }
 
-function peopleFromRows(rows: unknown): AdminPerson[] {
+function peopleFromRows(rows: unknown, withTime = false): AdminPerson[] {
   if (!Array.isArray(rows)) return [];
   return rows.flatMap((row) => {
     if (!row || typeof row !== "object") return [];
@@ -54,7 +57,7 @@ function peopleFromRows(rows: unknown): AdminPerson[] {
         phone: typeof record.phone === "string" ? record.phone : "",
         city: typeof record.city === "string" ? record.city : "",
         state: typeof record.state === "string" ? record.state : "",
-        joined: typeof record.created_at === "string" ? joinedLabel(record.created_at) : "—",
+        joined: typeof record.created_at === "string" ? joinedLabel(record.created_at, withTime) : "—",
       },
     ];
   });
@@ -219,7 +222,7 @@ async function AdminGate({
       announcedSlugs={announcedResult?.error ? [] : announcedFromRows(announcedResult?.data)}
       contestSlug={current === "contests" ? contestQuery(contest) : null}
       peopleReady={!peopleResult?.error}
-      people={peopleFromRows(peopleResult?.data)}
+      people={peopleFromRows(peopleResult?.data, current === "users")}
       enquiriesReady={!enquiryResult?.error}
       enquiries={enquiriesFromRows(enquiryResult?.data)}
       countsReady={!countsResult?.error}

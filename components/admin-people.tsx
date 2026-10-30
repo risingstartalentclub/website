@@ -328,7 +328,7 @@ export function AdminPeople({
                         </td>
                       </>
                     )}
-                    <td className="font-body-sm text-body-sm px-4 py-3 text-on-surface-variant">{person.joined}</td>
+                    <td className="font-body-sm text-body-sm px-4 py-3 whitespace-nowrap text-on-surface-variant">{person.joined}</td>
                   </tr>
                 ))}
               </tbody>

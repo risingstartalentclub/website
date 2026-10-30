@@ -35,6 +35,21 @@ export function ContestParticipants({
   return (
     <form action={action} className="flex flex-col gap-4">
       <input type="hidden" name="contestSlug" value={contestSlug} />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="font-headline-md text-headline-md text-primary">Participants</h2>
+          <p className="font-body-sm text-body-sm mt-1 text-on-surface-variant">
+            {entries.length === 1 ? "1 entry" : `${entries.length} entries`}
+          </p>
+        </div>
+        <button
+          type="submit"
+          disabled={pending || !ready || entries.length === 0}
+          className="font-label-md text-label-md rounded-lg bg-primary-container px-4 py-2 font-bold text-on-primary disabled:opacity-70"
+        >
+          {pending ? "Saving..." : "Save winners"}
+        </button>
+      </div>
       {announced ? (
         <p className="font-body-sm text-body-sm rounded-lg bg-tertiary-fixed px-3 py-2 text-on-tertiary-fixed">
           Results are already visible to parents. Saving again replaces the winner selection.
@@ -92,13 +107,6 @@ export function ContestParticipants({
       )}
       {state?.error ? <p className="font-body-sm text-body-sm text-error">{state.error}</p> : null}
       {state?.message ? <p className="font-body-sm text-body-sm text-primary">{state.message}</p> : null}
-      <button
-        type="submit"
-        disabled={pending || !ready || entries.length === 0}
-        className="font-label-md text-label-md w-fit rounded-lg bg-primary-container px-4 py-2 font-bold text-on-primary disabled:opacity-70"
-      >
-        {pending ? "Saving..." : "Save winners"}
-      </button>
     </form>
   );
 }

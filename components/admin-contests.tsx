@@ -349,12 +349,6 @@ export function AdminContests({
                 Edit contest
               </button>
             </div>
-            <div>
-              <h2 className="font-headline-md text-headline-md text-primary">Participants</h2>
-              <p className="font-body-sm text-body-sm mt-1 text-on-surface-variant">
-                {participants.length === 1 ? "1 entry" : `${participants.length} entries`}
-              </p>
-            </div>
             <ContestParticipants
               contestSlug={opened.slug}
               entries={participants}
